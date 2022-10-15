@@ -48,31 +48,31 @@ int main() {
   cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
   cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 1, 1, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
 
-  int batch_size{0}, channels{0}, height{0}, width{0};
+  int batch_size, channels, height, width;
   cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, tensor_descriptor, filter_descriptor, &batch_size, &channels, &height, &width));
 
   cudnnTensorDescriptor_t output_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
   cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, 1, 3, image.rows, image.cols));
 
-  int returnedAlgoCount;
-  cudnnConvolutionFwdAlgoPerf_t perfResults[1];
-  cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(cudnn, tensor_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &returnedAlgoCount, perfResults));
+  cudnnConvolutionFwdAlgoPerf_t performance_result;
+  int count;
+  cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(cudnn, tensor_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
 
-  cudnnConvolutionFwdAlgo_t convolution_algorithm = perfResults[0].algo;
-  size_t workspace_bytes{0};
+  cudnnConvolutionFwdAlgo_t convolution_algorithm = performance_result.algo;
+  size_t workspace_bytes = 0;
   cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(cudnn, tensor_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_bytes));
 
-  void* d_workspace{nullptr};
+  void* d_workspace = NULL;
   cuda_assert(cudaMalloc(&d_workspace, workspace_bytes));
 
   int image_bytes = batch_size * channels * height * width * sizeof(float);
 
-  float* d_input{nullptr};
+  float* d_input = NULL;
   cuda_assert(cudaMalloc(&d_input, image_bytes));
   cuda_assert(cudaMemcpy(d_input, image.ptr<float>(0), image_bytes, cudaMemcpyHostToDevice));
 
-  float* d_output{nullptr};
+  float* d_output = NULL;
   cuda_assert(cudaMalloc(&d_output, image_bytes));
   cuda_assert(cudaMemset(d_output, 0, image_bytes));
 
@@ -93,7 +93,7 @@ int main() {
     }
   }
 
-  float* d_kernel{nullptr};
+  float* d_kernel = NULL;
   cuda_assert(cudaMalloc(&d_kernel, sizeof(h_kernel)));
   cuda_assert(cudaMemcpy(d_kernel, h_kernel, sizeof(h_kernel), cudaMemcpyHostToDevice));
 
