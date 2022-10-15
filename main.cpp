@@ -36,9 +36,9 @@ int main() {
   cudnnHandle_t cudnn;
   cudnnCreate(&cudnn);
 
-  cudnnTensorDescriptor_t input_descriptor;
-  cudnn_assert(cudnnCreateTensorDescriptor(&input_descriptor));
-  cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, 1, 3, image.rows, image.cols));
+  cudnnTensorDescriptor_t tensor_descriptor;
+  cudnn_assert(cudnnCreateTensorDescriptor(&tensor_descriptor));
+  cudnn_assert(cudnnSetTensor4dDescriptor(tensor_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, 1, 3, image.rows, image.cols));
 
   cudnnFilterDescriptor_t kernel_descriptor;
   cudnn_assert(cudnnCreateFilterDescriptor(&kernel_descriptor));
@@ -49,7 +49,7 @@ int main() {
   cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 1, 1, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
 
   int batch_size{0}, channels{0}, height{0}, width{0};
-  cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, kernel_descriptor, &batch_size, &channels, &height, &width));
+  cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, tensor_descriptor, kernel_descriptor, &batch_size, &channels, &height, &width));
 
   cudnnTensorDescriptor_t output_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
@@ -57,11 +57,11 @@ int main() {
 
   int returnedAlgoCount;
   cudnnConvolutionFwdAlgoPerf_t perfResults[1];
-  cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(cudnn, input_descriptor, kernel_descriptor, convolution_descriptor, output_descriptor, 1, &returnedAlgoCount, perfResults));
+  cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(cudnn, tensor_descriptor, kernel_descriptor, convolution_descriptor, output_descriptor, 1, &returnedAlgoCount, perfResults));
 
   cudnnConvolutionFwdAlgo_t convolution_algorithm = perfResults[0].algo;
   size_t workspace_bytes{0};
-  cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(cudnn, input_descriptor, kernel_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_bytes));
+  cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(cudnn, tensor_descriptor, kernel_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_bytes));
 
   void* d_workspace{nullptr};
   cuda_assert(cudaMalloc(&d_workspace, workspace_bytes));
@@ -99,7 +99,7 @@ int main() {
 
   const float alpha = 1.0f, beta = 0.0f;
 
-  cudnn_assert(cudnnConvolutionForward(cudnn, &alpha, input_descriptor, d_input, kernel_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, d_workspace, workspace_bytes, &beta, output_descriptor, d_output));
+  cudnn_assert(cudnnConvolutionForward(cudnn, &alpha, tensor_descriptor, d_input, kernel_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, d_workspace, workspace_bytes, &beta, output_descriptor, d_output));
 
   float* h_output = new float[image_bytes];
   cuda_assert(cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost));
@@ -112,7 +112,7 @@ int main() {
   cuda_assert(cudaFree(d_output));
   cuda_assert(cudaFree(d_workspace));
 
-  cudnnDestroyTensorDescriptor(input_descriptor);
+  cudnnDestroyTensorDescriptor(tensor_descriptor);
   cudnnDestroyTensorDescriptor(output_descriptor);
   cudnnDestroyFilterDescriptor(kernel_descriptor);
   cudnnDestroyConvolutionDescriptor(convolution_descriptor);
