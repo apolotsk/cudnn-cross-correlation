@@ -73,17 +73,17 @@ int main() {
   //assert(workspace_bytes > 0);
 
   void* d_workspace{nullptr};
-  cudaMalloc(&d_workspace, workspace_bytes);
+  cuda_assert(cudaMalloc(&d_workspace, workspace_bytes));
 
   int image_bytes = batch_size * channels * height * width * sizeof(float);
 
   float* d_input{nullptr};
-  cudaMalloc(&d_input, image_bytes);
-  cudaMemcpy(d_input, image.ptr<float>(0), image_bytes, cudaMemcpyHostToDevice);
+  cuda_assert(cudaMalloc(&d_input, image_bytes));
+  cuda_assert(cudaMemcpy(d_input, image.ptr<float>(0), image_bytes, cudaMemcpyHostToDevice));
 
   float* d_output{nullptr};
-  cudaMalloc(&d_output, image_bytes);
-  cudaMemset(d_output, 0, image_bytes);
+  cuda_assert(cudaMalloc(&d_output, image_bytes));
+  cuda_assert(cudaMemset(d_output, 0, image_bytes));
 
   const float kernel_template[3][3] = {
     {1, 1, 1},
@@ -103,23 +103,23 @@ int main() {
   }
 
   float* d_kernel{nullptr};
-  cudaMalloc(&d_kernel, sizeof(h_kernel));
-  cudaMemcpy(d_kernel, h_kernel, sizeof(h_kernel), cudaMemcpyHostToDevice);
+  cuda_assert(cudaMalloc(&d_kernel, sizeof(h_kernel)));
+  cuda_assert(cudaMemcpy(d_kernel, h_kernel, sizeof(h_kernel), cudaMemcpyHostToDevice));
 
   const float alpha = 1.0f, beta = 0.0f;
 
   cudnn_assert(cudnnConvolutionForward(cudnn, &alpha, input_descriptor, d_input, kernel_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, d_workspace, workspace_bytes, &beta, output_descriptor, d_output));
 
   float* h_output = new float[image_bytes];
-  cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost);
+  cuda_assert(cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost));
 
   save_image("cudnn-out.png", h_output, height, width);
 
   delete[] h_output;
-  cudaFree(d_kernel);
-  cudaFree(d_input);
-  cudaFree(d_output);
-  cudaFree(d_workspace);
+  cuda_assert(cudaFree(d_kernel));
+  cuda_assert(cudaFree(d_input));
+  cuda_assert(cudaFree(d_output));
+  cuda_assert(cudaFree(d_workspace));
 
   cudnnDestroyTensorDescriptor(input_descriptor);
   cudnnDestroyTensorDescriptor(output_descriptor);
