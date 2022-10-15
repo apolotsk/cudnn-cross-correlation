@@ -63,8 +63,8 @@ int main() {
   size_t workspace_size = 0;
   cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
 
-  void* workspace_device = NULL;
-  cuda_assert(cudaMalloc(&workspace_device, workspace_size));
+  void* workspace_data_device = NULL;
+  cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
 
   int image_size = batch_size * channels * height * width * sizeof(float);
 
@@ -102,7 +102,7 @@ int main() {
     handle, &alpha,
     input_descriptor, input_data_device,
     filter_descriptor, kernel_data_device,
-    convolution_descriptor, convolution_algorithm, workspace_device, workspace_size,
+    convolution_descriptor, convolution_algorithm, workspace_data_device, workspace_size,
     &beta,
     output_descriptor, output_data_device
   ));
@@ -115,7 +115,7 @@ int main() {
   cuda_assert(cudaFree(kernel_data_device));
   cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(output_data_device));
-  cuda_assert(cudaFree(workspace_device));
+  cuda_assert(cudaFree(workspace_data_device));
 
   cudnnDestroyTensorDescriptor(input_descriptor);
   cudnnDestroyTensorDescriptor(output_descriptor);
