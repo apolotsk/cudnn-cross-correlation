@@ -137,7 +137,7 @@ int main(int argc, const char* argv[]) {
                                                      &workspace_bytes));
   std::cerr << "Workspace size: " << (workspace_bytes / 1048576.0) << "MB"
             << std::endl;
-  assert(workspace_bytes > 0);
+  //assert(workspace_bytes > 0);
 
   void* d_workspace{nullptr};
   cudaMalloc(&d_workspace, workspace_bytes);
