@@ -5,36 +5,26 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
-#define checkCUDNN(expression)                               \
-  {                                                          \
-    cudnnStatus_t status = (expression);                     \
-    if (status != CUDNN_STATUS_SUCCESS) {                    \
-      std::cerr << "Error on line " << __LINE__ << ": "      \
-                << cudnnGetErrorString(status) << std::endl; \
-      std::exit(EXIT_FAILURE);                               \
-    }                                                        \
-  }
+#define checkCUDNN(expression) { \
+  cudnnStatus_t status = (expression); \
+  if (status != CUDNN_STATUS_SUCCESS) { \
+    std::cerr << "Error on line " << __LINE__ << ": " << cudnnGetErrorString(status) << std::endl; \
+    std::exit(EXIT_FAILURE); \
+  } \
+}
 
 cv::Mat load_image(const char* image_path) {
   cv::Mat image = cv::imread(image_path, cv::IMREAD_COLOR);
   image.convertTo(image, CV_32FC3);
   cv::normalize(image, image, 0, 1, cv::NORM_MINMAX);
-  std::cerr << "Input Image: " << image.rows << " x " << image.cols << " x "
-            << image.channels() << std::endl;
+  std::cerr << "Input Image: " << image.rows << " x " << image.cols << " x " << image.channels() << std::endl;
   return image;
 }
 
-void save_image(const char* output_filename,
-                float* buffer,
-                int height,
-                int width) {
+void save_image(const char* output_filename, float* buffer, int height, int width) {
   cv::Mat output_image(height, width, CV_32FC3, buffer);
   // Make negative values zero.
-  cv::threshold(output_image,
-                output_image,
-                /*threshold=*/0,
-                /*maxval=*/0,
-                cv::THRESH_TOZERO);
+  cv::threshold(output_image, output_image, /*threshold=*/0, /*maxval=*/0, cv::THRESH_TOZERO);
   cv::normalize(output_image, output_image, 0.0, 255.0, cv::NORM_MINMAX);
   output_image.convertTo(output_image, CV_8UC3);
   cv::imwrite(output_filename, output_image);
@@ -57,81 +47,33 @@ int main() {
 
   cudnnTensorDescriptor_t input_descriptor;
   checkCUDNN(cudnnCreateTensorDescriptor(&input_descriptor));
-  checkCUDNN(cudnnSetTensor4dDescriptor(input_descriptor,
-                                        /*format=*/CUDNN_TENSOR_NHWC,
-                                        /*dataType=*/CUDNN_DATA_FLOAT,
-                                        /*batch_size=*/1,
-                                        /*channels=*/3,
-                                        /*image_height=*/image.rows,
-                                        /*image_width=*/image.cols));
+  checkCUDNN(cudnnSetTensor4dDescriptor(input_descriptor, /*format=*/CUDNN_TENSOR_NHWC, /*dataType=*/CUDNN_DATA_FLOAT, /*batch_size=*/1, /*channels=*/3, /*image_height=*/image.rows, /*image_width=*/image.cols));
 
   cudnnFilterDescriptor_t kernel_descriptor;
   checkCUDNN(cudnnCreateFilterDescriptor(&kernel_descriptor));
-  checkCUDNN(cudnnSetFilter4dDescriptor(kernel_descriptor,
-                                        /*dataType=*/CUDNN_DATA_FLOAT,
-                                        /*format=*/CUDNN_TENSOR_NCHW,
-                                        /*out_channels=*/3,
-                                        /*in_channels=*/3,
-                                        /*kernel_height=*/3,
-                                        /*kernel_width=*/3));
+  checkCUDNN(cudnnSetFilter4dDescriptor(kernel_descriptor, /*dataType=*/CUDNN_DATA_FLOAT, /*format=*/CUDNN_TENSOR_NCHW, /*out_channels=*/3, /*in_channels=*/3, /*kernel_height=*/3, /*kernel_width=*/3));
 
   cudnnConvolutionDescriptor_t convolution_descriptor;
   checkCUDNN(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-  checkCUDNN(cudnnSetConvolution2dDescriptor(convolution_descriptor,
-                                             /*pad_height=*/1,
-                                             /*pad_width=*/1,
-                                             /*vertical_stride=*/1,
-                                             /*horizontal_stride=*/1,
-                                             /*dilation_height=*/1,
-                                             /*dilation_width=*/1,
-                                             /*mode=*/CUDNN_CROSS_CORRELATION,
-                                             /*computeType=*/CUDNN_DATA_FLOAT));
+  checkCUDNN(cudnnSetConvolution2dDescriptor(convolution_descriptor, /*pad_height=*/1, /*pad_width=*/1, /*vertical_stride=*/1, /*horizontal_stride=*/1, /*dilation_height=*/1, /*dilation_width=*/1, /*mode=*/CUDNN_CROSS_CORRELATION, /*computeType=*/CUDNN_DATA_FLOAT));
 
   int batch_size{0}, channels{0}, height{0}, width{0};
-  checkCUDNN(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor,
-                                                   input_descriptor,
-                                                   kernel_descriptor,
-                                                   &batch_size,
-                                                   &channels,
-                                                   &height,
-                                                   &width));
+  checkCUDNN(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, kernel_descriptor, &batch_size, &channels, &height, &width));
 
-  std::cerr << "Output Image: " << height << " x " << width << " x " << channels
-            << std::endl;
+  std::cerr << "Output Image: " << height << " x " << width << " x " << channels << std::endl;
 
   cudnnTensorDescriptor_t output_descriptor;
   checkCUDNN(cudnnCreateTensorDescriptor(&output_descriptor));
-  checkCUDNN(cudnnSetTensor4dDescriptor(output_descriptor,
-                                        /*format=*/CUDNN_TENSOR_NHWC,
-                                        /*dataType=*/CUDNN_DATA_FLOAT,
-                                        /*batch_size=*/1,
-                                        /*channels=*/3,
-                                        /*image_height=*/image.rows,
-                                        /*image_width=*/image.cols));
+  checkCUDNN(cudnnSetTensor4dDescriptor(output_descriptor, /*format=*/CUDNN_TENSOR_NHWC, /*dataType=*/CUDNN_DATA_FLOAT, /*batch_size=*/1, /*channels=*/3, /*image_height=*/image.rows, /*image_width=*/image.cols));
 
   int returnedAlgoCount;
   cudnnConvolutionFwdAlgoPerf_t perfResults[1];
-  checkCUDNN(
-      cudnnGetConvolutionForwardAlgorithm_v7(cudnn,
-                                          input_descriptor,
-                                          kernel_descriptor,
-                                          convolution_descriptor,
-                                          output_descriptor,
-                                          1,
-                                          &returnedAlgoCount,
-                                          perfResults));
+  checkCUDNN(cudnnGetConvolutionForwardAlgorithm_v7(cudnn, input_descriptor, kernel_descriptor, convolution_descriptor, output_descriptor, 1, &returnedAlgoCount, perfResults));
 
   cudnnConvolutionFwdAlgo_t convolution_algorithm = perfResults[0].algo;
   size_t workspace_bytes{0};
-  checkCUDNN(cudnnGetConvolutionForwardWorkspaceSize(cudnn,
-                                                     input_descriptor,
-                                                     kernel_descriptor,
-                                                     convolution_descriptor,
-                                                     output_descriptor,
-                                                     convolution_algorithm,
-                                                     &workspace_bytes));
-  std::cerr << "Workspace size: " << (workspace_bytes / 1048576.0) << "MB"
-            << std::endl;
+  checkCUDNN(cudnnGetConvolutionForwardWorkspaceSize(cudnn, input_descriptor, kernel_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_bytes));
+  std::cerr << "Workspace size: " << (workspace_bytes / 1048576.0) << "MB" << std::endl;
   //assert(workspace_bytes > 0);
 
   void* d_workspace{nullptr};
@@ -147,13 +89,11 @@ int main() {
   cudaMalloc(&d_output, image_bytes);
   cudaMemset(d_output, 0, image_bytes);
 
-  // clang-format off
   const float kernel_template[3][3] = {
     {1, 1, 1},
     {1, -8, 1},
     {1, 1, 1}
   };
-  // clang-format on
 
   float h_kernel[3][3][3][3];
   for (int kernel = 0; kernel < 3; ++kernel) {
@@ -172,35 +112,13 @@ int main() {
 
   const float alpha = 1.0f, beta = 0.0f;
 
-  checkCUDNN(cudnnConvolutionForward(cudnn,
-                                     &alpha,
-                                     input_descriptor,
-                                     d_input,
-                                     kernel_descriptor,
-                                     d_kernel,
-                                     convolution_descriptor,
-                                     convolution_algorithm,
-                                     d_workspace,
-                                     workspace_bytes,
-                                     &beta,
-                                     output_descriptor,
-                                     d_output));
+  checkCUDNN(cudnnConvolutionForward(cudnn, &alpha, input_descriptor, d_input, kernel_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, d_workspace, workspace_bytes, &beta, output_descriptor, d_output));
 
   if (with_sigmoid) {
     cudnnActivationDescriptor_t activation_descriptor;
     checkCUDNN(cudnnCreateActivationDescriptor(&activation_descriptor));
-    checkCUDNN(cudnnSetActivationDescriptor(activation_descriptor,
-                                            CUDNN_ACTIVATION_SIGMOID,
-                                            CUDNN_PROPAGATE_NAN,
-                                            /*relu_coef=*/0));
-    checkCUDNN(cudnnActivationForward(cudnn,
-                                      activation_descriptor,
-                                      &alpha,
-                                      output_descriptor,
-                                      d_output,
-                                      &beta,
-                                      output_descriptor,
-                                      d_output));
+    checkCUDNN(cudnnSetActivationDescriptor(activation_descriptor, CUDNN_ACTIVATION_SIGMOID, CUDNN_PROPAGATE_NAN, /*relu_coef=*/0));
+    checkCUDNN(cudnnActivationForward(cudnn, activation_descriptor, &alpha, output_descriptor, d_output, &beta, output_descriptor, d_output));
     cudnnDestroyActivationDescriptor(activation_descriptor);
   }
 
