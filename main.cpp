@@ -24,7 +24,7 @@ cv::Mat load_image(const char* filepath) {
 
 void save_image(const float* data, int height, int width, const char* filepath) {
   cv::Mat image(height, width, CV_32FC3, (float*)data);
-  cv::threshold(image, image, /*threshold=*/0, /*maxval=*/0, cv::THRESH_TOZERO);
+  cv::threshold(image, image, 0, 0, cv::THRESH_TOZERO);
   cv::normalize(image, image, 0.0, 255.0, cv::NORM_MINMAX);
   image.convertTo(image, CV_8UC3);
   cv::imwrite(filepath, image);
@@ -38,22 +38,22 @@ int main() {
 
   cudnnTensorDescriptor_t input_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&input_descriptor));
-  cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, /*format=*/CUDNN_TENSOR_NHWC, /*dataType=*/CUDNN_DATA_FLOAT, /*batch_size=*/1, /*channels=*/3, /*image_height=*/image.rows, /*image_width=*/image.cols));
+  cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, 1, 3, image.rows, image.cols));
 
   cudnnFilterDescriptor_t kernel_descriptor;
   cudnn_assert(cudnnCreateFilterDescriptor(&kernel_descriptor));
-  cudnn_assert(cudnnSetFilter4dDescriptor(kernel_descriptor, /*dataType=*/CUDNN_DATA_FLOAT, /*format=*/CUDNN_TENSOR_NCHW, /*out_channels=*/3, /*in_channels=*/3, /*kernel_height=*/3, /*kernel_width=*/3));
+  cudnn_assert(cudnnSetFilter4dDescriptor(kernel_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, 3, 3, 3, 3));
 
   cudnnConvolutionDescriptor_t convolution_descriptor;
   cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-  cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, /*pad_height=*/1, /*pad_width=*/1, /*vertical_stride=*/1, /*horizontal_stride=*/1, /*dilation_height=*/1, /*dilation_width=*/1, /*mode=*/CUDNN_CROSS_CORRELATION, /*computeType=*/CUDNN_DATA_FLOAT));
+  cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 1, 1, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
 
   int batch_size{0}, channels{0}, height{0}, width{0};
   cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, kernel_descriptor, &batch_size, &channels, &height, &width));
 
   cudnnTensorDescriptor_t output_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
-  cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, /*format=*/CUDNN_TENSOR_NHWC, /*dataType=*/CUDNN_DATA_FLOAT, /*batch_size=*/1, /*channels=*/3, /*image_height=*/image.rows, /*image_width=*/image.cols));
+  cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, 1, 3, image.rows, image.cols));
 
   int returnedAlgoCount;
   cudnnConvolutionFwdAlgoPerf_t perfResults[1];
