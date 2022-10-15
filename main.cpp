@@ -98,7 +98,14 @@ int main() {
   cuda_assert(cudaMemcpy(kernel_data_device, h_kernel, sizeof(h_kernel), cudaMemcpyHostToDevice));
 
   const float alpha = 1.0f, beta = 0.0f;
-  cudnn_assert(cudnnConvolutionForward(handle, &alpha, input_descriptor, input_data_device, filter_descriptor, kernel_data_device, convolution_descriptor, convolution_algorithm, workspace_device, workspace_bytes, &beta, output_descriptor, output_data_device));
+  cudnn_assert(cudnnConvolutionForward(
+    handle, &alpha,
+    input_descriptor, input_data_device,
+    filter_descriptor, kernel_data_device,
+    convolution_descriptor, convolution_algorithm, workspace_device, workspace_bytes,
+    &beta,
+    output_descriptor, output_data_device
+  ));
 
   float* output_data = new float[image_bytes];
   cuda_assert(cudaMemcpy(output_data, output_data_device, image_bytes, cudaMemcpyDeviceToHost));
