@@ -36,6 +36,10 @@ int main() {
   cudnnHandle_t cudnn;
   cudnnCreate(&cudnn);
 
+  cudnnConvolutionDescriptor_t convolution_descriptor;
+  cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
+  cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 1, 1, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
+
   cudnnTensorDescriptor_t tensor_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&tensor_descriptor));
   cudnn_assert(cudnnSetTensor4dDescriptor(tensor_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, 1, 3, image.rows, image.cols));
@@ -43,10 +47,6 @@ int main() {
   cudnnFilterDescriptor_t filter_descriptor;
   cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
   cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, 3, 3, 3, 3));
-
-  cudnnConvolutionDescriptor_t convolution_descriptor;
-  cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-  cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 1, 1, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
 
   int batch_size, channels, height, width;
   cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, tensor_descriptor, filter_descriptor, &batch_size, &channels, &height, &width));
