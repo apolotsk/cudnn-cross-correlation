@@ -60,11 +60,11 @@ int main() {
   cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
 
   cudnnConvolutionFwdAlgo_t convolution_algorithm = performance_result.algo;
-  size_t workspace_bytes = 0;
-  cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_bytes));
+  size_t workspace_size = 0;
+  cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
 
   void* workspace_device = NULL;
-  cuda_assert(cudaMalloc(&workspace_device, workspace_bytes));
+  cuda_assert(cudaMalloc(&workspace_device, workspace_size));
 
   int image_bytes = batch_size * channels * height * width * sizeof(float);
 
@@ -102,7 +102,7 @@ int main() {
     handle, &alpha,
     input_descriptor, input_data_device,
     filter_descriptor, kernel_data_device,
-    convolution_descriptor, convolution_algorithm, workspace_device, workspace_bytes,
+    convolution_descriptor, convolution_algorithm, workspace_device, workspace_size,
     &beta,
     output_descriptor, output_data_device
   ));
