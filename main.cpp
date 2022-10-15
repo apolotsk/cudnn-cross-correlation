@@ -101,12 +101,12 @@ int main() {
 
   cudnn_assert(cudnnConvolutionForward(handle, &alpha, tensor_descriptor, input_data_device, filter_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, workspace_device, workspace_bytes, &beta, output_descriptor, output_data_device));
 
-  float* h_output = new float[image_bytes];
-  cuda_assert(cudaMemcpy(h_output, output_data_device, image_bytes, cudaMemcpyDeviceToHost));
+  float* output_data = new float[image_bytes];
+  cuda_assert(cudaMemcpy(output_data, output_data_device, image_bytes, cudaMemcpyDeviceToHost));
 
-  save_image(h_output, height, width, "output.png");
+  save_image(output_data, height, width, "output.png");
 
-  delete[] h_output;
+  delete[] output_data;
   cuda_assert(cudaFree(d_kernel));
   cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(output_data_device));
