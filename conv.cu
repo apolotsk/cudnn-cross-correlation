@@ -16,7 +16,7 @@
   }
 
 cv::Mat load_image(const char* image_path) {
-  cv::Mat image = cv::imread(image_path, CV_LOAD_IMAGE_COLOR);
+  cv::Mat image = cv::imread(image_path, cv::IMREAD_COLOR);
   image.convertTo(image, CV_32FC3);
   cv::normalize(image, image, 0, 1, cv::NORM_MINMAX);
   std::cerr << "Input Image: " << image.rows << " x " << image.cols << " x "
@@ -114,17 +114,19 @@ int main(int argc, const char* argv[]) {
                                         /*image_height=*/image.rows,
                                         /*image_width=*/image.cols));
 
-  cudnnConvolutionFwdAlgo_t convolution_algorithm;
+  int returnedAlgoCount;
+  cudnnConvolutionFwdAlgoPerf_t perfResults[1];
   checkCUDNN(
-      cudnnGetConvolutionForwardAlgorithm(cudnn,
+      cudnnGetConvolutionForwardAlgorithm_v7(cudnn,
                                           input_descriptor,
                                           kernel_descriptor,
                                           convolution_descriptor,
                                           output_descriptor,
-                                          CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
-                                          /*memoryLimitInBytes=*/0,
-                                          &convolution_algorithm));
+                                          1,
+                                          &returnedAlgoCount,
+                                          perfResults));
 
+  cudnnConvolutionFwdAlgo_t convolution_algorithm = perfResults[0].algo;
   size_t workspace_bytes{0};
   checkCUDNN(cudnnGetConvolutionForwardWorkspaceSize(cudnn,
                                                      input_descriptor,
