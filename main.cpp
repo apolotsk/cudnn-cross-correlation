@@ -68,9 +68,9 @@ int main() {
 
   int image_bytes = batch_size * channels * height * width * sizeof(float);
 
-  float* d_input = NULL;
-  cuda_assert(cudaMalloc(&d_input, image_bytes));
-  cuda_assert(cudaMemcpy(d_input, image.ptr(), image_bytes, cudaMemcpyHostToDevice));
+  float* input_data_device = NULL;
+  cuda_assert(cudaMalloc(&input_data_device, image_bytes));
+  cuda_assert(cudaMemcpy(input_data_device, image.ptr(), image_bytes, cudaMemcpyHostToDevice));
 
   float* d_output = NULL;
   cuda_assert(cudaMalloc(&d_output, image_bytes));
@@ -99,7 +99,7 @@ int main() {
 
   const float alpha = 1.0f, beta = 0.0f;
 
-  cudnn_assert(cudnnConvolutionForward(handle, &alpha, tensor_descriptor, d_input, filter_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, workspace_device, workspace_bytes, &beta, output_descriptor, d_output));
+  cudnn_assert(cudnnConvolutionForward(handle, &alpha, tensor_descriptor, input_data_device, filter_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, workspace_device, workspace_bytes, &beta, output_descriptor, d_output));
 
   float* h_output = new float[image_bytes];
   cuda_assert(cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost));
@@ -108,7 +108,7 @@ int main() {
 
   delete[] h_output;
   cuda_assert(cudaFree(d_kernel));
-  cuda_assert(cudaFree(d_input));
+  cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(d_output));
   cuda_assert(cudaFree(workspace_device));
 
