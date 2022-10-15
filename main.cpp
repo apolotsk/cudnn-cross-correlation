@@ -32,9 +32,6 @@ void save_image(const char* output_filename, float* buffer, int height, int widt
 }
 
 int main() {
-  bool with_sigmoid = false;
-  std::cerr << "With sigmoid: " << std::boolalpha << with_sigmoid << std::endl;
-
   cv::Mat image = load_image("tensorflow.png");
 
   cudnnHandle_t cudnn;
@@ -108,14 +105,6 @@ int main() {
   const float alpha = 1.0f, beta = 0.0f;
 
   checkCUDNN(cudnnConvolutionForward(cudnn, &alpha, input_descriptor, d_input, kernel_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, d_workspace, workspace_bytes, &beta, output_descriptor, d_output));
-
-  if (with_sigmoid) {
-    cudnnActivationDescriptor_t activation_descriptor;
-    checkCUDNN(cudnnCreateActivationDescriptor(&activation_descriptor));
-    checkCUDNN(cudnnSetActivationDescriptor(activation_descriptor, CUDNN_ACTIVATION_SIGMOID, CUDNN_PROPAGATE_NAN, /*relu_coef=*/0));
-    checkCUDNN(cudnnActivationForward(cudnn, activation_descriptor, &alpha, output_descriptor, d_output, &beta, output_descriptor, d_output));
-    cudnnDestroyActivationDescriptor(activation_descriptor);
-  }
 
   float* h_output = new float[image_bytes];
   cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost);
