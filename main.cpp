@@ -33,8 +33,8 @@ void save_image(const float* data, int height, int width, const char* filepath) 
 int main() {
   cv::Mat image = load_image("input.png");
 
-  cudnnHandle_t cudnn;
-  cudnnCreate(&cudnn);
+  cudnnHandle_t handle;
+  cudnnCreate(&handle);
 
   cudnnConvolutionDescriptor_t convolution_descriptor;
   cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
@@ -57,11 +57,11 @@ int main() {
 
   cudnnConvolutionFwdAlgoPerf_t performance_result;
   int count;
-  cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(cudnn, tensor_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
+  cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(handle, tensor_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
 
   cudnnConvolutionFwdAlgo_t convolution_algorithm = performance_result.algo;
   size_t workspace_bytes = 0;
-  cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(cudnn, tensor_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_bytes));
+  cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, tensor_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_bytes));
 
   void* d_workspace = NULL;
   cuda_assert(cudaMalloc(&d_workspace, workspace_bytes));
@@ -99,7 +99,7 @@ int main() {
 
   const float alpha = 1.0f, beta = 0.0f;
 
-  cudnn_assert(cudnnConvolutionForward(cudnn, &alpha, tensor_descriptor, d_input, filter_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, d_workspace, workspace_bytes, &beta, output_descriptor, d_output));
+  cudnn_assert(cudnnConvolutionForward(handle, &alpha, tensor_descriptor, d_input, filter_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, d_workspace, workspace_bytes, &beta, output_descriptor, d_output));
 
   float* h_output = new float[image_bytes];
   cuda_assert(cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost));
@@ -117,5 +117,5 @@ int main() {
   cudnnDestroyFilterDescriptor(filter_descriptor);
   cudnnDestroyConvolutionDescriptor(convolution_descriptor);
 
-  cudnnDestroy(cudnn);
+  cudnnDestroy(handle);
 }
