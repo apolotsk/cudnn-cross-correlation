@@ -70,7 +70,7 @@ int main() {
 
   float* d_input = NULL;
   cuda_assert(cudaMalloc(&d_input, image_bytes));
-  cuda_assert(cudaMemcpy(d_input, image.ptr<float>(0), image_bytes, cudaMemcpyHostToDevice));
+  cuda_assert(cudaMemcpy(d_input, image.ptr(), image_bytes, cudaMemcpyHostToDevice));
 
   float* d_output = NULL;
   cuda_assert(cudaMalloc(&d_output, image_bytes));
