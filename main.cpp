@@ -31,7 +31,7 @@ void save_image(const float* data, int height, int width, const char* filepath) 
 }
 
 int main() {
-  cv::Mat image = load_image("tensorflow.png");
+  cv::Mat image = load_image("input.png");
 
   cudnnHandle_t cudnn;
   cudnnCreate(&cudnn);
@@ -104,7 +104,7 @@ int main() {
   float* h_output = new float[image_bytes];
   cuda_assert(cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost));
 
-  save_image(h_output, height, width, "cudnn-out.png");
+  save_image(h_output, height, width, "output.png");
 
   delete[] h_output;
   cuda_assert(cudaFree(d_kernel));
