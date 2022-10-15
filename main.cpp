@@ -66,15 +66,15 @@ int main() {
   void* workspace_device = NULL;
   cuda_assert(cudaMalloc(&workspace_device, workspace_size));
 
-  int image_bytes = batch_size * channels * height * width * sizeof(float);
+  int image_size = batch_size * channels * height * width * sizeof(float);
 
   float* input_data_device = NULL;
-  cuda_assert(cudaMalloc(&input_data_device, image_bytes));
-  cuda_assert(cudaMemcpy(input_data_device, image.ptr(), image_bytes, cudaMemcpyHostToDevice));
+  cuda_assert(cudaMalloc(&input_data_device, image_size));
+  cuda_assert(cudaMemcpy(input_data_device, image.ptr(), image_size, cudaMemcpyHostToDevice));
 
   float* output_data_device = NULL;
-  cuda_assert(cudaMalloc(&output_data_device, image_bytes));
-  cuda_assert(cudaMemset(output_data_device, 0, image_bytes));
+  cuda_assert(cudaMalloc(&output_data_device, image_size));
+  cuda_assert(cudaMemset(output_data_device, 0, image_size));
 
   const float kernel_template[3][3] = {
     {1, 1, 1},
@@ -107,8 +107,8 @@ int main() {
     output_descriptor, output_data_device
   ));
 
-  float* output_data = new float[image_bytes];
-  cuda_assert(cudaMemcpy(output_data, output_data_device, image_bytes, cudaMemcpyDeviceToHost));
+  float* output_data = new float[image_size];
+  cuda_assert(cudaMemcpy(output_data, output_data_device, image_size, cudaMemcpyDeviceToHost));
   save_image(output_data, height, width, "output.png");
   delete[] output_data;
 
