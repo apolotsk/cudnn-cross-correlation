@@ -32,15 +32,10 @@ void save_image(const char* output_filename, float* buffer, int height, int widt
 }
 
 int main() {
-  int gpu_id = 0;
-  std::cerr << "GPU: " << gpu_id << std::endl;
-
   bool with_sigmoid = false;
   std::cerr << "With sigmoid: " << std::boolalpha << with_sigmoid << std::endl;
 
   cv::Mat image = load_image("tensorflow.png");
-
-  cudaSetDevice(gpu_id);
 
   cudnnHandle_t cudnn;
   cudnnCreate(&cudnn);
