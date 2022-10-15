@@ -62,7 +62,6 @@ int main() {
   cudnnConvolutionFwdAlgo_t convolution_algorithm = performance_result.algo;
   size_t workspace_size = 0;
   cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
-
   void* workspace_data_device = NULL;
   cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
 
