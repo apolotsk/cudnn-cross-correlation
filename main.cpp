@@ -93,13 +93,13 @@ int main() {
     }
   }
 
-  float* d_kernel = NULL;
-  cuda_assert(cudaMalloc(&d_kernel, sizeof(h_kernel)));
-  cuda_assert(cudaMemcpy(d_kernel, h_kernel, sizeof(h_kernel), cudaMemcpyHostToDevice));
+  float* kernel_data_device = NULL;
+  cuda_assert(cudaMalloc(&kernel_data_device, sizeof(h_kernel)));
+  cuda_assert(cudaMemcpy(kernel_data_device, h_kernel, sizeof(h_kernel), cudaMemcpyHostToDevice));
 
   const float alpha = 1.0f, beta = 0.0f;
 
-  cudnn_assert(cudnnConvolutionForward(handle, &alpha, tensor_descriptor, input_data_device, filter_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, workspace_device, workspace_bytes, &beta, output_descriptor, output_data_device));
+  cudnn_assert(cudnnConvolutionForward(handle, &alpha, tensor_descriptor, input_data_device, filter_descriptor, kernel_data_device, convolution_descriptor, convolution_algorithm, workspace_device, workspace_bytes, &beta, output_descriptor, output_data_device));
 
   float* output_data = new float[image_bytes];
   cuda_assert(cudaMemcpy(output_data, output_data_device, image_bytes, cudaMemcpyDeviceToHost));
@@ -107,7 +107,7 @@ int main() {
   save_image(output_data, height, width, "output.png");
 
   delete[] output_data;
-  cuda_assert(cudaFree(d_kernel));
+  cuda_assert(cudaFree(kernel_data_device));
   cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(output_data_device));
   cuda_assert(cudaFree(workspace_device));
