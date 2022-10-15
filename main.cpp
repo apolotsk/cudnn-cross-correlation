@@ -17,22 +17,19 @@ void cudnn_assert(cudnnStatus_t status) {
   exit(1);
 }
 
-cv::Mat load_image(const char* image_path) {
-  cv::Mat image = cv::imread(image_path, cv::IMREAD_COLOR);
+cv::Mat load_image(const char* filepath) {
+  cv::Mat image = cv::imread(filepath, cv::IMREAD_COLOR);
   image.convertTo(image, CV_32FC3);
   cv::normalize(image, image, 0, 1, cv::NORM_MINMAX);
-  std::cerr << "Input Image: " << image.rows << " x " << image.cols << " x " << image.channels() << std::endl;
   return image;
 }
 
-void save_image(const char* output_filename, float* buffer, int height, int width) {
-  cv::Mat output_image(height, width, CV_32FC3, buffer);
-  // Make negative values zero.
-  cv::threshold(output_image, output_image, /*threshold=*/0, /*maxval=*/0, cv::THRESH_TOZERO);
-  cv::normalize(output_image, output_image, 0.0, 255.0, cv::NORM_MINMAX);
-  output_image.convertTo(output_image, CV_8UC3);
-  cv::imwrite(output_filename, output_image);
-  std::cerr << "Wrote output to " << output_filename << std::endl;
+void save_image(const float* data, int height, int width, const char* filepath) {
+  cv::Mat image(height, width, CV_32FC3, (float*)data);
+  cv::threshold(image, image, /*threshold=*/0, /*maxval=*/0, cv::THRESH_TOZERO);
+  cv::normalize(image, image, 0.0, 255.0, cv::NORM_MINMAX);
+  image.convertTo(image, CV_8UC3);
+  cv::imwrite(filepath, image);
 }
 
 int main() {
@@ -113,7 +110,7 @@ int main() {
   float* h_output = new float[image_bytes];
   cuda_assert(cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost));
 
-  save_image("cudnn-out.png", h_output, height, width);
+  save_image(h_output, height, width, "cudnn-out.png");
 
   delete[] h_output;
   cuda_assert(cudaFree(d_kernel));
