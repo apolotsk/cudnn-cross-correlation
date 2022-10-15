@@ -63,8 +63,8 @@ int main() {
   size_t workspace_bytes = 0;
   cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, tensor_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_bytes));
 
-  void* d_workspace = NULL;
-  cuda_assert(cudaMalloc(&d_workspace, workspace_bytes));
+  void* workspace_device = NULL;
+  cuda_assert(cudaMalloc(&workspace_device, workspace_bytes));
 
   int image_bytes = batch_size * channels * height * width * sizeof(float);
 
@@ -99,7 +99,7 @@ int main() {
 
   const float alpha = 1.0f, beta = 0.0f;
 
-  cudnn_assert(cudnnConvolutionForward(handle, &alpha, tensor_descriptor, d_input, filter_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, d_workspace, workspace_bytes, &beta, output_descriptor, d_output));
+  cudnn_assert(cudnnConvolutionForward(handle, &alpha, tensor_descriptor, d_input, filter_descriptor, d_kernel, convolution_descriptor, convolution_algorithm, workspace_device, workspace_bytes, &beta, output_descriptor, d_output));
 
   float* h_output = new float[image_bytes];
   cuda_assert(cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost));
@@ -110,7 +110,7 @@ int main() {
   cuda_assert(cudaFree(d_kernel));
   cuda_assert(cudaFree(d_input));
   cuda_assert(cudaFree(d_output));
-  cuda_assert(cudaFree(d_workspace));
+  cuda_assert(cudaFree(workspace_device));
 
   cudnnDestroyTensorDescriptor(tensor_descriptor);
   cudnnDestroyTensorDescriptor(output_descriptor);
