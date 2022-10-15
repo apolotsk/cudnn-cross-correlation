@@ -1,8 +1,6 @@
 // https://www.goldsborough.me/cuda/ml/cudnn/c++/2017/10/01/14-37-23-convolutions_with_cudnn/
+#include <cuda_runtime.h>
 #include <cudnn.h>
-#include <cassert>
-#include <cstdlib>
-#include <iostream>
 #include <opencv2/opencv.hpp>
 
 void cuda_assert(cudaError_t error) {
