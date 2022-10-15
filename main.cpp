@@ -53,8 +53,6 @@ int main() {
   int batch_size{0}, channels{0}, height{0}, width{0};
   cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, kernel_descriptor, &batch_size, &channels, &height, &width));
 
-  std::cerr << "Output Image: " << height << " x " << width << " x " << channels << std::endl;
-
   cudnnTensorDescriptor_t output_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
   cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, /*format=*/CUDNN_TENSOR_NHWC, /*dataType=*/CUDNN_DATA_FLOAT, /*batch_size=*/1, /*channels=*/3, /*image_height=*/image.rows, /*image_width=*/image.cols));
@@ -66,8 +64,6 @@ int main() {
   cudnnConvolutionFwdAlgo_t convolution_algorithm = perfResults[0].algo;
   size_t workspace_bytes{0};
   cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(cudnn, input_descriptor, kernel_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_bytes));
-  std::cerr << "Workspace size: " << (workspace_bytes / 1048576.0) << "MB" << std::endl;
-  //assert(workspace_bytes > 0);
 
   void* d_workspace{nullptr};
   cuda_assert(cudaMalloc(&d_workspace, workspace_bytes));
