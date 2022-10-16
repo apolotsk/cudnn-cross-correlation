@@ -91,11 +91,7 @@ int main() {
 
   for (int o = 0; o<filter_output_count; ++o) {
     for (int i = 0; i<filter_input_count; ++i) {
-      for (int y = 0; y<filter_height; ++y) {
-        for (int x = 0; x<filter_width; ++x) {
-          filter_data[o][i][y][x] = filter_template[y][x];
-        }
-      }
+      memcpy(filter_data[o][i], filter_template, sizeof filter_template);
     }
   }
 
