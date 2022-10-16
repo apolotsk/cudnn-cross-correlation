@@ -24,10 +24,10 @@ cv::Mat load_image(const char* filepath) {
 }
 
 void save_image(const float* data, int height, int width, const char* filepath) {
-  cv::Mat image(height, width, CV_32FC3, (float*)data);
+  cv::Mat image(height, width, CV_32FC1, (float*)data);
   cv::threshold(image, image, 0, 0, cv::THRESH_TOZERO);
   cv::normalize(image, image, 0.0, 255.0, cv::NORM_MINMAX);
-  image.convertTo(image, CV_8UC3);
+  image.convertTo(image, CV_8UC1);
   cv::imwrite(filepath, image);
 }
 
@@ -49,7 +49,7 @@ int main() {
 
   cudnnFilterDescriptor_t filter_descriptor;
   cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
-  const int filter_output_count = 3, filter_input_count = 3, filter_height = 3, filter_width = 3;
+  const int filter_output_count = 1, filter_input_count = 3, filter_height = 3, filter_width = 3;
   cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, filter_output_count, filter_input_count, filter_height, filter_width));
 
   int output_batch_size, output_channels, output_height, output_width;
