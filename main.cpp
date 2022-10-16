@@ -82,32 +82,32 @@ int main() {
   cuda_assert(cudaMalloc(&output_data_device, output_data_size));
   cuda_assert(cudaMemset(output_data_device, 0, output_data_size));
 
-  const float kernel_template[filter_height][filter_width] = {
+  float filter_data[filter_output_count][filter_input_count][filter_height][filter_width];
+  const float filter_template[filter_height][filter_width] = {
     {1, 1, 1},
     {1, -8, 1},
     {1, 1, 1}
   };
 
-  float h_kernel[filter_output_count][filter_input_count][filter_height][filter_width];
-  for (int kernel = 0; kernel < filter_output_count; ++kernel) {
-    for (int channel = 0; channel < filter_input_count; ++channel) {
-      for (int row = 0; row < filter_height; ++row) {
-        for (int column = 0; column < filter_width; ++column) {
-          h_kernel[kernel][channel][row][column] = kernel_template[row][column];
+  for (int o = 0; o<filter_output_count; ++o) {
+    for (int i = 0; i<filter_input_count; ++i) {
+      for (int y = 0; y<filter_height; ++y) {
+        for (int x = 0; x<filter_width; ++x) {
+          filter_data[o][i][y][x] = filter_template[y][x];
         }
       }
     }
   }
 
-  float* kernel_data_device = NULL;
-  cuda_assert(cudaMalloc(&kernel_data_device, sizeof(h_kernel)));
-  cuda_assert(cudaMemcpy(kernel_data_device, h_kernel, sizeof(h_kernel), cudaMemcpyHostToDevice));
+  float* filter_data_device = NULL;
+  cuda_assert(cudaMalloc(&filter_data_device, sizeof filter_data));
+  cuda_assert(cudaMemcpy(filter_data_device, filter_data, sizeof filter_data, cudaMemcpyHostToDevice));
 
   const float alpha = 1.0f, beta = 0.0f;
   cudnn_assert(cudnnConvolutionForward(
     handle, &alpha,
     input_descriptor, input_data_device,
-    filter_descriptor, kernel_data_device,
+    filter_descriptor, filter_data_device,
     convolution_descriptor, convolution_algorithm, workspace_data_device, workspace_size,
     &beta,
     output_descriptor, output_data_device
@@ -118,7 +118,7 @@ int main() {
   save_image(output_data, output_height, output_width, "output.png");
   delete[] output_data;
 
-  cuda_assert(cudaFree(kernel_data_device));
+  cuda_assert(cudaFree(filter_data_device));
   cuda_assert(cudaFree(output_data_device));
   cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(workspace_data_device));
