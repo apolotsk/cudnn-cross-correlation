@@ -112,8 +112,8 @@ int main() {
   delete[] output_data;
 
   cuda_assert(cudaFree(kernel_data_device));
-  cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(output_data_device));
+  cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(workspace_data_device));
 
   cudnnDestroyTensorDescriptor(input_descriptor);
