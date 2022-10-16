@@ -35,22 +35,27 @@ void save_image(const float* data, int height, int width, const char* filepath) 
 }
 
 int main() {
+  cudnnConvolutionDescriptor_t convolution_descriptor;
+  {
+    cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
+    cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
+  }
+
   cv::Mat image = load_image("input.png");
   void* input_data = image.ptr();
   int batch_size = 1, input_channels = image.channels(), input_height = image.rows, input_width = image.cols;
-
-  cudnnConvolutionDescriptor_t convolution_descriptor;
-  cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-  cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
-
   cudnnTensorDescriptor_t input_descriptor;
-  cudnn_assert(cudnnCreateTensorDescriptor(&input_descriptor));
-  cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, input_channels, input_height, input_width));
+  {
+    cudnn_assert(cudnnCreateTensorDescriptor(&input_descriptor));
+    cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, input_channels, input_height, input_width));
+  }
 
-  cudnnFilterDescriptor_t filter_descriptor;
-  cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
   const int filter_output_count = 1, filter_input_count = input_channels, filter_height = 3, filter_width = 3;
-  cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, filter_output_count, filter_input_count, filter_height, filter_width));
+  cudnnFilterDescriptor_t filter_descriptor;
+  {
+    cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
+    cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, filter_output_count, filter_input_count, filter_height, filter_width));
+  }
 
   int output_batch_size, output_channels, output_height, output_width;
   cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &output_batch_size, &output_channels, &output_height, &output_width));
