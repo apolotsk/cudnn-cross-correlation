@@ -32,6 +32,8 @@ void save_image(const float* data, int height, int width, const char* filepath) 
 
 int main() {
   cv::Mat image = load_image("input.png");
+  void* input_data = image.ptr();
+  int batch_size = 1, input_channels = image.channels(), input_height = image.rows, input_width = image.cols;
 
   cudnnHandle_t handle;
   cudnnCreate(&handle);
@@ -42,7 +44,7 @@ int main() {
 
   cudnnTensorDescriptor_t input_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&input_descriptor));
-  cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, 1, 3, image.rows, image.cols));
+  cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, input_channels, input_height, input_width));
 
   cudnnFilterDescriptor_t filter_descriptor;
   cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
@@ -69,9 +71,9 @@ int main() {
   cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
 
   float* input_data_device = NULL;
-  int input_data_size = batch_size2 * channels * height * width * sizeof(float);
+  int input_data_size = batch_size * input_channels * input_height * input_width * sizeof(float);
   cuda_assert(cudaMalloc(&input_data_device, input_data_size));
-  cuda_assert(cudaMemcpy(input_data_device, image.ptr(), input_data_size, cudaMemcpyHostToDevice));
+  cuda_assert(cudaMemcpy(input_data_device, input_data, input_data_size, cudaMemcpyHostToDevice));
 
   float* output_data_device = NULL;
   int output_data_size = batch_size2 * channels * height * width * sizeof(float);
