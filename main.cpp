@@ -77,7 +77,7 @@ int main() {
   }
 
   cudnnConvolutionFwdAlgo_t convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
-  {
+  if (1) {
     cudnnConvolutionFwdAlgoPerf_t performance_result;
     int count;
     cudnn_assert(cudnnFindConvolutionForwardAlgorithm(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
