@@ -120,8 +120,8 @@ int main() {
   cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(workspace_data_device));
 
-  cudnnDestroyTensorDescriptor(input_descriptor);
   cudnnDestroyTensorDescriptor(output_descriptor);
+  cudnnDestroyTensorDescriptor(input_descriptor);
   cudnnDestroyFilterDescriptor(filter_descriptor);
   cudnnDestroyConvolutionDescriptor(convolution_descriptor);
 
