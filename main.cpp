@@ -26,8 +26,8 @@ cv::Mat load_image(const char* filepath) {
 }
 
 #include <opencv2/opencv.hpp>
-void save_image(const float* data, int height, int width, const char* filepath) {
-  cv::Mat image(height, width, CV_32FC1, (float*)data);
+void save_image(const void* data, int height, int width, const char* filepath) {
+  cv::Mat image(height, width, CV_32FC1, (void*)data);
   cv::threshold(image, image, 0, 0, cv::THRESH_TOZERO);
   cv::normalize(image, image, 0.0, 255.0, cv::NORM_MINMAX);
   image.convertTo(image, CV_8UC1);
@@ -91,14 +91,14 @@ int main() {
     cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
   }
 
-  float* input_data_device = NULL;
+  void* input_data_device = NULL;
   {
     int input_data_size = batch_size * input_channels * input_height * input_width * sizeof(float);
     cuda_assert(cudaMalloc(&input_data_device, input_data_size));
     cuda_assert(cudaMemcpy(input_data_device, input_data, input_data_size, cudaMemcpyHostToDevice));
   }
 
-  float* filter_data_device = NULL;
+  void* filter_data_device = NULL;
   {
     float filter_data[filter_output_count][filter_input_count][filter_height][filter_width];
     const float filter_template[filter_height][filter_width] = {
@@ -117,7 +117,7 @@ int main() {
     cuda_assert(cudaMemcpy(filter_data_device, filter_data, sizeof filter_data, cudaMemcpyHostToDevice));
   }
 
-  float* output_data_device = NULL;
+  void* output_data_device = NULL;
   {
     int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(float);
     cuda_assert(cudaMalloc(&output_data_device, output_data_size));
@@ -138,7 +138,7 @@ int main() {
 
   {
     int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(float);
-    float* output_data = (float*)malloc(output_data_size);
+    void* output_data = malloc(output_data_size);
     cuda_assert(cudaMemcpy(output_data, output_data_device, output_data_size, cudaMemcpyDeviceToHost));
     save_image(output_data, output_height, output_width, "output.png");
     free(output_data);
