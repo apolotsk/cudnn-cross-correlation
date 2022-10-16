@@ -44,7 +44,7 @@ int main() {
 
   cudnnConvolutionDescriptor_t convolution_descriptor;
   cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-  cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 1, 1, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
+  cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
 
   cudnnTensorDescriptor_t input_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&input_descriptor));
