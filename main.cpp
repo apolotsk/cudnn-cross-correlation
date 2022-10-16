@@ -74,7 +74,7 @@ int main() {
     cudnnCreate(&handle);
   }
 
-  cudnnConvolutionFwdAlgo_t convolution_algorithm;
+  cudnnConvolutionFwdAlgo_t convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
   {
     cudnnConvolutionFwdAlgoPerf_t performance_result;
     int count;
