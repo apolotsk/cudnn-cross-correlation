@@ -1,4 +1,5 @@
 // https://www.goldsborough.me/cuda/ml/cudnn/c++/2017/10/01/14-37-23-convolutions_with_cudnn/
+#include <assert.h>
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <opencv2/opencv.hpp>
@@ -52,9 +53,10 @@ int main() {
 
   int output_batch_size, output_channels, output_height, output_width;
   cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &output_batch_size, &output_channels, &output_height, &output_width));
+  assert(output_batch_size==batch_size);
   cudnnTensorDescriptor_t output_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
-  cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, output_batch_size, output_channels, output_height, output_width));
+  cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, output_channels, output_height, output_width));
 
   cudnnConvolutionFwdAlgo_t convolution_algorithm;
   {
@@ -75,7 +77,7 @@ int main() {
   cuda_assert(cudaMemcpy(input_data_device, input_data, input_data_size, cudaMemcpyHostToDevice));
 
   float* output_data_device = NULL;
-  int output_data_size = output_batch_size * output_channels * output_height * output_width * sizeof(float);
+  int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(float);
   cuda_assert(cudaMalloc(&output_data_device, output_data_size));
   cuda_assert(cudaMemset(output_data_device, 0, output_data_size));
 
