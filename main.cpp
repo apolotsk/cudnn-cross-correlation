@@ -1,6 +1,7 @@
 // https://www.goldsborough.me/cuda/ml/cudnn/c++/2017/10/01/14-37-23-convolutions_with_cudnn/
 #include <stdio.h> // For `printf()`.
 #include <assert.h>
+#include <string.h> // For `memcpy()`.
 #include <stdlib.h> // For `exit()`.
 
 #include <cuda_runtime.h>
