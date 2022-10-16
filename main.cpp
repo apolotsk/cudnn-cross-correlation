@@ -78,7 +78,7 @@ int main() {
   {
     cudnnConvolutionFwdAlgoPerf_t performance_result;
     int count;
-    cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
+    cudnn_assert(cudnnFindConvolutionForwardAlgorithm(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
     convolution_algorithm = performance_result.algo;
   }
 
