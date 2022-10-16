@@ -49,7 +49,8 @@ int main() {
 
   cudnnFilterDescriptor_t filter_descriptor;
   cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
-  cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, 3, 3, 3, 3));
+  const int filter_output_count = 3, filter_input_count = 3, filter_height = 3, filter_width = 3;
+  cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, filter_output_count, filter_input_count, filter_height, filter_width));
 
   int output_batch_size, output_channels, output_height, output_width;
   cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &output_batch_size, &output_channels, &output_height, &output_width));
@@ -81,17 +82,17 @@ int main() {
   cuda_assert(cudaMalloc(&output_data_device, output_data_size));
   cuda_assert(cudaMemset(output_data_device, 0, output_data_size));
 
-  const float kernel_template[3][3] = {
+  const float kernel_template[filter_height][filter_width] = {
     {1, 1, 1},
     {1, -8, 1},
     {1, 1, 1}
   };
 
-  float h_kernel[3][3][3][3];
-  for (int kernel = 0; kernel < 3; ++kernel) {
-    for (int channel = 0; channel < 3; ++channel) {
-      for (int row = 0; row < 3; ++row) {
-        for (int column = 0; column < 3; ++column) {
+  float h_kernel[filter_output_count][filter_input_count][filter_height][filter_width];
+  for (int kernel = 0; kernel < filter_output_count; ++kernel) {
+    for (int channel = 0; channel < filter_input_count; ++channel) {
+      for (int row = 0; row < filter_height; ++row) {
+        for (int column = 0; column < filter_width; ++column) {
           h_kernel[kernel][channel][row][column] = kernel_template[row][column];
         }
       }
