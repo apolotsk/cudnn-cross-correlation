@@ -43,7 +43,6 @@ int main() {
   }
 
   cv::Mat image = load_image("input.png");
-  void* input_data = image.ptr();
   int batch_size = 1, input_channels = image.channels(), input_height = image.rows, input_width = image.cols;
   cudnnTensorDescriptor_t input_descriptor;
   {
@@ -92,6 +91,7 @@ int main() {
     cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
   }
 
+  void* input_data = image.ptr();
   void* input_data_device = NULL;
   {
     int input_data_size = batch_size * input_channels * input_height * input_width * sizeof(float);
@@ -135,6 +135,7 @@ int main() {
     &beta,
     output_descriptor, output_data_device
   ));
+  cudaDeviceSynchronize();
 
 
   {
