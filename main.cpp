@@ -138,10 +138,10 @@ int main() {
 
   {
     int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(float);
-    float* output_data = new float[output_data_size];
+    float* output_data = (float*)malloc(output_data_size);
     cuda_assert(cudaMemcpy(output_data, output_data_device, output_data_size, cudaMemcpyDeviceToHost));
     save_image(output_data, output_height, output_width, "output.png");
-    delete[] output_data;
+    free(output_data);
   }
 
   cuda_assert(cudaFree(output_data_device));
