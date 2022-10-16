@@ -2,15 +2,15 @@
 #include <stdio.h> // For `printf()`.
 #include <assert.h>
 #include <stdlib.h> // For `exit()`.
-#include <cuda_runtime.h>
-#include <cudnn.h>
 
+#include <cuda_runtime.h>
 void cuda_assert(cudaError_t error) {
   if (error==cudaSuccess) return;
   printf("Error: %s.", cudaGetErrorString(error));
   exit(1);
 }
 
+#include <cudnn.h>
 void cudnn_assert(cudnnStatus_t status) {
   if (status==CUDNN_STATUS_SUCCESS) return;
   printf("Error: %s.", cudnnGetErrorString(status));
@@ -25,6 +25,7 @@ cv::Mat load_image(const char* filepath) {
   return image;
 }
 
+#include <opencv2/opencv.hpp>
 void save_image(const float* data, int height, int width, const char* filepath) {
   cv::Mat image(height, width, CV_32FC1, (float*)data);
   cv::threshold(image, image, 0, 0, cv::THRESH_TOZERO);
