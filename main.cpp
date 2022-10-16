@@ -50,12 +50,11 @@ int main() {
   cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
   cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, 3, 3, 3, 3));
 
-  int batch_size2, channels, height, width;
-  cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &batch_size2, &channels, &height, &width));
-
+  int output_batch_size, output_channels, output_height, output_width;
+  cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &output_batch_size, &output_channels, &output_height, &output_width));
   cudnnTensorDescriptor_t output_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
-  cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, 1, 3, image.rows, image.cols));
+  cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, output_batch_size, output_channels, output_height, output_width));
 
   cudnnConvolutionFwdAlgo_t convolution_algorithm;
   {
@@ -76,7 +75,7 @@ int main() {
   cuda_assert(cudaMemcpy(input_data_device, input_data, input_data_size, cudaMemcpyHostToDevice));
 
   float* output_data_device = NULL;
-  int output_data_size = batch_size2 * channels * height * width * sizeof(float);
+  int output_data_size = output_batch_size * output_channels * output_height * output_width * sizeof(float);
   cuda_assert(cudaMalloc(&output_data_device, output_data_size));
   cuda_assert(cudaMemset(output_data_device, 0, output_data_size));
 
@@ -113,7 +112,7 @@ int main() {
 
   float* output_data = new float[output_data_size];
   cuda_assert(cudaMemcpy(output_data, output_data_device, output_data_size, cudaMemcpyDeviceToHost));
-  save_image(output_data, height, width, "output.png");
+  save_image(output_data, output_height, output_width, "output.png");
   delete[] output_data;
 
   cuda_assert(cudaFree(kernel_data_device));
