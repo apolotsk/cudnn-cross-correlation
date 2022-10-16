@@ -55,10 +55,13 @@ int main() {
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
   cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, 1, 3, image.rows, image.cols));
 
-  cudnnConvolutionFwdAlgoPerf_t performance_result;
-  int count;
-  cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
-  cudnnConvolutionFwdAlgo_t convolution_algorithm = performance_result.algo;
+  cudnnConvolutionFwdAlgo_t convolution_algorithm;
+  {
+    cudnnConvolutionFwdAlgoPerf_t performance_result;
+    int count;
+    cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
+    convolution_algorithm = performance_result.algo;
+  }
 
   size_t workspace_size = 0;
   cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
