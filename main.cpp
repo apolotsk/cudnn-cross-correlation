@@ -58,15 +58,21 @@ int main() {
   }
 
   int output_batch_size, output_channels, output_height, output_width;
-  cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &output_batch_size, &output_channels, &output_height, &output_width));
-  assert(output_batch_size==batch_size);
-  assert(output_channels==filter_output_count);
+  {
+    cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &output_batch_size, &output_channels, &output_height, &output_width));
+    assert(output_batch_size==batch_size);
+    assert(output_channels==filter_output_count);
+  }
   cudnnTensorDescriptor_t output_descriptor;
-  cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
-  cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, output_channels, output_height, output_width));
+  {
+    cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
+    cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, output_channels, output_height, output_width));
+  }
 
   cudnnHandle_t handle;
-  cudnnCreate(&handle);
+  {
+    cudnnCreate(&handle);
+  }
 
   cudnnConvolutionFwdAlgo_t convolution_algorithm;
   {
@@ -77,9 +83,13 @@ int main() {
   }
 
   size_t workspace_size = 0;
-  cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
+  {
+    cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
+  }
   void* workspace_data_device = NULL;
-  cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
+  {
+    cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
+  }
 
   float* input_data_device = NULL;
   {
