@@ -77,31 +77,37 @@ int main() {
   cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
 
   float* input_data_device = NULL;
-  int input_data_size = batch_size * input_channels * input_height * input_width * sizeof(float);
-  cuda_assert(cudaMalloc(&input_data_device, input_data_size));
-  cuda_assert(cudaMemcpy(input_data_device, input_data, input_data_size, cudaMemcpyHostToDevice));
+  {
+    int input_data_size = batch_size * input_channels * input_height * input_width * sizeof(float);
+    cuda_assert(cudaMalloc(&input_data_device, input_data_size));
+    cuda_assert(cudaMemcpy(input_data_device, input_data, input_data_size, cudaMemcpyHostToDevice));
+  }
 
   float* output_data_device = NULL;
-  int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(float);
-  cuda_assert(cudaMalloc(&output_data_device, output_data_size));
-  cuda_assert(cudaMemset(output_data_device, 0, output_data_size));
-
-  float filter_data[filter_output_count][filter_input_count][filter_height][filter_width];
-  const float filter_template[filter_height][filter_width] = {
-    {1, 1, 1},
-    {1, -8, 1},
-    {1, 1, 1}
-  };
-
-  for (int o = 0; o<filter_output_count; ++o) {
-    for (int i = 0; i<filter_input_count; ++i) {
-      memcpy(filter_data[o][i], filter_template, sizeof filter_template);
-    }
+  {
+    int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(float);
+    cuda_assert(cudaMalloc(&output_data_device, output_data_size));
+    cuda_assert(cudaMemset(output_data_device, 0, output_data_size));
   }
 
   float* filter_data_device = NULL;
-  cuda_assert(cudaMalloc(&filter_data_device, sizeof filter_data));
-  cuda_assert(cudaMemcpy(filter_data_device, filter_data, sizeof filter_data, cudaMemcpyHostToDevice));
+  {
+    float filter_data[filter_output_count][filter_input_count][filter_height][filter_width];
+    const float filter_template[filter_height][filter_width] = {
+      {1, 1, 1},
+      {1, -8, 1},
+      {1, 1, 1}
+    };
+
+    for (int o = 0; o<filter_output_count; ++o) {
+      for (int i = 0; i<filter_input_count; ++i) {
+        memcpy(filter_data[o][i], filter_template, sizeof filter_template);
+      }
+    }
+
+    cuda_assert(cudaMalloc(&filter_data_device, sizeof filter_data));
+    cuda_assert(cudaMemcpy(filter_data_device, filter_data, sizeof filter_data, cudaMemcpyHostToDevice));
+  }
 
   const float alpha = 1.0f, beta = 0.0f;
   cudnn_assert(cudnnConvolutionForward(
@@ -113,10 +119,13 @@ int main() {
     output_descriptor, output_data_device
   ));
 
-  float* output_data = new float[output_data_size];
-  cuda_assert(cudaMemcpy(output_data, output_data_device, output_data_size, cudaMemcpyDeviceToHost));
-  save_image(output_data, output_height, output_width, "output.png");
-  delete[] output_data;
+  {
+    int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(float);
+    float* output_data = new float[output_data_size];
+    cuda_assert(cudaMemcpy(output_data, output_data_device, output_data_size, cudaMemcpyDeviceToHost));
+    save_image(output_data, output_height, output_width, "output.png");
+    delete[] output_data;
+  }
 
   cuda_assert(cudaFree(filter_data_device));
   cuda_assert(cudaFree(output_data_device));
@@ -124,8 +133,8 @@ int main() {
   cuda_assert(cudaFree(workspace_data_device));
 
   cudnnDestroyTensorDescriptor(output_descriptor);
-  cudnnDestroyTensorDescriptor(input_descriptor);
   cudnnDestroyFilterDescriptor(filter_descriptor);
+  cudnnDestroyTensorDescriptor(input_descriptor);
   cudnnDestroyConvolutionDescriptor(convolution_descriptor);
 
   cudnnDestroy(handle);
