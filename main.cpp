@@ -39,9 +39,6 @@ int main() {
   void* input_data = image.ptr();
   int batch_size = 1, input_channels = image.channels(), input_height = image.rows, input_width = image.cols;
 
-  cudnnHandle_t handle;
-  cudnnCreate(&handle);
-
   cudnnConvolutionDescriptor_t convolution_descriptor;
   cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
   cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
@@ -62,6 +59,9 @@ int main() {
   cudnnTensorDescriptor_t output_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
   cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, output_channels, output_height, output_width));
+
+  cudnnHandle_t handle;
+  cudnnCreate(&handle);
 
   cudnnConvolutionFwdAlgo_t convolution_algorithm;
   {
@@ -134,10 +134,10 @@ int main() {
   cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(workspace_data_device));
 
+  cudnnDestroy(handle);
+
   cudnnDestroyTensorDescriptor(output_descriptor);
   cudnnDestroyFilterDescriptor(filter_descriptor);
   cudnnDestroyTensorDescriptor(input_descriptor);
   cudnnDestroyConvolutionDescriptor(convolution_descriptor);
-
-  cudnnDestroy(handle);
 }
