@@ -1,8 +1,9 @@
 // https://www.goldsborough.me/cuda/ml/cudnn/c++/2017/10/01/14-37-23-convolutions_with_cudnn/
+#include <stdio.h> // For `printf()`.
 #include <assert.h>
+#include <stdlib.h> // For `exit()`.
 #include <cuda_runtime.h>
 #include <cudnn.h>
-#include <opencv2/opencv.hpp>
 
 void cuda_assert(cudaError_t error) {
   if (error==cudaSuccess) return;
@@ -16,6 +17,7 @@ void cudnn_assert(cudnnStatus_t status) {
   exit(1);
 }
 
+#include <opencv2/opencv.hpp>
 cv::Mat load_image(const char* filepath) {
   cv::Mat image = cv::imread(filepath, cv::IMREAD_COLOR);
   image.convertTo(image, CV_32FC3);
