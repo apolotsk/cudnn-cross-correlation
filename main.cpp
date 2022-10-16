@@ -5,18 +5,20 @@
 #include <stdlib.h> // For `exit()`.
 
 #include <cuda_runtime.h>
-void cuda_assert(cudaError_t error) {
+void _cuda_assert(cudaError_t error, int line) {
   if (error==cudaSuccess) return;
-  printf("Error: %s.", cudaGetErrorString(error));
+  printf("Error at line %d: %s.\n", line, cudaGetErrorString(error));
   exit(1);
 }
+#define cuda_assert(status) _cuda_assert(status, __LINE__);
 
 #include <cudnn.h>
-void cudnn_assert(cudnnStatus_t status) {
+void _cudnn_assert(cudnnStatus_t status, int line) {
   if (status==CUDNN_STATUS_SUCCESS) return;
-  printf("Error: %s.", cudnnGetErrorString(status));
+  printf("Error at line %d: %s.\n", line, cudnnGetErrorString(status));
   exit(1);
 }
+#define cudnn_assert(status) _cudnn_assert(status, __LINE__);
 
 #include <opencv2/opencv.hpp>
 cv::Mat load_image(const char* filepath) {
