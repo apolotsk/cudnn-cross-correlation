@@ -49,12 +49,13 @@ int main() {
 
   cudnnFilterDescriptor_t filter_descriptor;
   cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
-  const int filter_output_count = 1, filter_input_count = 3, filter_height = 3, filter_width = 3;
+  const int filter_output_count = 1, filter_input_count = input_channels, filter_height = 3, filter_width = 3;
   cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, filter_output_count, filter_input_count, filter_height, filter_width));
 
   int output_batch_size, output_channels, output_height, output_width;
   cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &output_batch_size, &output_channels, &output_height, &output_width));
   assert(output_batch_size==batch_size);
+  assert(output_channels==filter_output_count);
   cudnnTensorDescriptor_t output_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
   cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, output_channels, output_height, output_width));
