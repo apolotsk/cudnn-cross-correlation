@@ -48,8 +48,8 @@ int main() {
   cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
   cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, 3, 3, 3, 3));
 
-  int batch_size, channels, height, width;
-  cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &batch_size, &channels, &height, &width));
+  int batch_size2, channels, height, width;
+  cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &batch_size2, &channels, &height, &width));
 
   cudnnTensorDescriptor_t output_descriptor;
   cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
@@ -58,20 +58,20 @@ int main() {
   cudnnConvolutionFwdAlgoPerf_t performance_result;
   int count;
   cudnn_assert(cudnnGetConvolutionForwardAlgorithm_v7(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
-
   cudnnConvolutionFwdAlgo_t convolution_algorithm = performance_result.algo;
+
   size_t workspace_size = 0;
   cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
   void* workspace_data_device = NULL;
   cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
 
   float* input_data_device = NULL;
-  int input_data_size = batch_size * channels * height * width * sizeof(float);
+  int input_data_size = batch_size2 * channels * height * width * sizeof(float);
   cuda_assert(cudaMalloc(&input_data_device, input_data_size));
   cuda_assert(cudaMemcpy(input_data_device, image.ptr(), input_data_size, cudaMemcpyHostToDevice));
 
   float* output_data_device = NULL;
-  int output_data_size = batch_size * channels * height * width * sizeof(float);
+  int output_data_size = batch_size2 * channels * height * width * sizeof(float);
   cuda_assert(cudaMalloc(&output_data_device, output_data_size));
   cuda_assert(cudaMemset(output_data_device, 0, output_data_size));
 
