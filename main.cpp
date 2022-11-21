@@ -38,25 +38,28 @@ void save_image(const void* data, int height, int width, const char* filepath) {
 }
 
 int main() {
+  cudnnDataType_t type = CUDNN_DATA_FLOAT;
+  typedef float Type;
+
   cudnnConvolutionDescriptor_t convolution_descriptor;
   {
     cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-    cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
+    cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, type));
   }
 
   cv::Mat image = load_image("input.png");
-  int batch_size = 1, input_channels = image.channels(), input_height = image.rows, input_width = image.cols;
+  const int batch_size = 1, input_channels = image.channels(), input_height = image.rows, input_width = image.cols;
   cudnnTensorDescriptor_t input_descriptor;
   {
     cudnn_assert(cudnnCreateTensorDescriptor(&input_descriptor));
-    cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, input_channels, input_height, input_width));
+    cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NHWC, type, batch_size, input_channels, input_height, input_width));
   }
 
   const int filter_output_count = 1, filter_input_count = input_channels, filter_height = 3, filter_width = 3;
   cudnnFilterDescriptor_t filter_descriptor;
   {
     cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
-    cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, filter_output_count, filter_input_count, filter_height, filter_width));
+    cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, type, CUDNN_TENSOR_NCHW, filter_output_count, filter_input_count, filter_height, filter_width));
   }
 
   int output_batch_size, output_channels, output_height, output_width;
@@ -68,7 +71,7 @@ int main() {
   cudnnTensorDescriptor_t output_descriptor;
   {
     cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
-    cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, CUDNN_DATA_FLOAT, batch_size, output_channels, output_height, output_width));
+    cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, type, batch_size, output_channels, output_height, output_width));
   }
 
   cudnnHandle_t handle;
@@ -83,10 +86,12 @@ int main() {
     cudnn_assert(cudnnFindConvolutionForwardAlgorithm(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
     convolution_algorithm = performance_result.algo;
   }
+  printf("convolution_algorithm = %d\n", convolution_algorithm);
 
   size_t workspace_size = 0;
   {
     cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
+    printf("workspace_size = %lu\n", workspace_size);
   }
   void* workspace_data_device = NULL;
   {
@@ -96,15 +101,15 @@ int main() {
   void* input_data = image.ptr();
   void* input_data_device = NULL;
   {
-    int input_data_size = batch_size * input_channels * input_height * input_width * sizeof(float);
+    int input_data_size = batch_size * input_channels * input_height * input_width * sizeof(Type);
     cuda_assert(cudaMalloc(&input_data_device, input_data_size));
     cuda_assert(cudaMemcpy(input_data_device, input_data, input_data_size, cudaMemcpyHostToDevice));
   }
 
   void* filter_data_device = NULL;
   {
-    float filter_data[filter_output_count][filter_input_count][filter_height][filter_width];
-    const float filter_template[filter_height][filter_width] = {
+    Type filter_data[filter_output_count][filter_input_count][filter_height][filter_width];
+    const Type filter_template[filter_height][filter_width] = {
       {1, 1, 1},
       {1, -8, 1},
       {1, 1, 1}
@@ -120,9 +125,11 @@ int main() {
     cuda_assert(cudaMemcpy(filter_data_device, filter_data, sizeof filter_data, cudaMemcpyHostToDevice));
   }
 
+  void *output_data = NULL;
   void* output_data_device = NULL;
   {
-    int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(float);
+    int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(Type);
+    output_data = malloc(output_data_size);
     cuda_assert(cudaMalloc(&output_data_device, output_data_size));
     cuda_assert(cudaMemset(output_data_device, 0, output_data_size));
   }
@@ -141,14 +148,13 @@ int main() {
 
 
   {
-    int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(float);
-    void* output_data = malloc(output_data_size);
+    int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(Type);
     cuda_assert(cudaMemcpy(output_data, output_data_device, output_data_size, cudaMemcpyDeviceToHost));
     save_image(output_data, output_height, output_width, "output.png");
-    free(output_data);
   }
 
   cuda_assert(cudaFree(output_data_device));
+  free(output_data);
   cuda_assert(cudaFree(filter_data_device));
   cuda_assert(cudaFree(input_data_device));
   cuda_assert(cudaFree(workspace_data_device));
