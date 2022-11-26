@@ -37,132 +37,225 @@ void save_image(const void* data, int height, int width, const char* filepath) {
   cv::imwrite(filepath, image);
 }
 
+#include <tuple>
+class ConvolutionDescriptor {
+  cudnnConvolutionDescriptor_t convolution_descriptor;
+public:
+  void Create(cudnnDataType_t type = CUDNN_DATA_FLOAT) {
+    cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
+    cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, type));
+  }
+  std::tuple<int,int,int,int> OutputDim(const cudnnTensorDescriptor_t& input_descriptor, const cudnnFilterDescriptor_t& filter_descriptor) {
+    int batch_size, channels, height, width;
+    cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &batch_size, &channels, &height, &width));
+    return {batch_size, channels, height, width};
+  }
+  cudnnConvolutionFwdAlgo_t FindAlgorithm(const cudnnHandle_t& handle, const cudnnTensorDescriptor_t& input_descriptor, const cudnnFilterDescriptor_t& filter_descriptor, const cudnnTensorDescriptor_t& output_descriptor) {
+    cudnnConvolutionFwdAlgoPerf_t performance_result;
+    int count;
+    cudnn_assert(cudnnFindConvolutionForwardAlgorithm(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
+    return performance_result.algo;
+  }
+  int WorkspaceSize(cudnnHandle_t handle, cudnnTensorDescriptor_t input_descriptor, cudnnFilterDescriptor_t filter_descriptor, cudnnTensorDescriptor_t output_descriptor, cudnnConvolutionFwdAlgo_t convolution_algorithm) {
+    size_t workspace_size;
+    cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
+    return workspace_size;
+  }
+  void Forward(cudnnHandle_t handle, const cudnnTensorDescriptor_t input_descriptor, const void *input_data_device, const cudnnFilterDescriptor_t filter_descriptor, const void *filter_data_device, const cudnnConvolutionDescriptor_t convolution_descriptor, cudnnConvolutionFwdAlgo_t convolution_algorithm, void *workspace_data_device, size_t workspace_size, const cudnnTensorDescriptor_t output_descriptor, void *output_data_device) {
+    const float alpha = 1.0f, beta = 0.0f;
+    cudnn_assert(cudnnConvolutionForward(
+      handle, &alpha,
+      input_descriptor, input_data_device,
+      filter_descriptor, filter_data_device,
+      convolution_descriptor, convolution_algorithm, workspace_data_device, workspace_size,
+      &beta,
+      output_descriptor, output_data_device
+    ));
+  }
+  operator cudnnConvolutionDescriptor_t() const { return convolution_descriptor; }
+  void Destroy() {
+    cudnn_assert(cudnnDestroyConvolutionDescriptor(convolution_descriptor));
+  }
+};
+
+class TensorDescriptor {
+  cudnnTensorDescriptor_t tensor_descriptor;
+public:
+  void Create(int batch_size, int channels, int height, int width, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
+    cudnn_assert(cudnnCreateTensorDescriptor(&tensor_descriptor));
+    cudnn_assert(cudnnSetTensor4dDescriptor(tensor_descriptor, format, type, batch_size, channels, height, width));
+  }
+  operator cudnnTensorDescriptor_t() const { return tensor_descriptor; }
+  void Destroy() {
+    cudnn_assert(cudnnDestroyTensorDescriptor(tensor_descriptor));
+  }
+};
+
+class FilterDescriptor {
+  cudnnFilterDescriptor_t filter_descriptor;
+public:
+  void Create(int output_count, int input_count, int height, int width, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW) {
+    cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
+    cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, type, format, output_count, input_count, height, width));
+  }
+
+  operator cudnnFilterDescriptor_t() const { return filter_descriptor; }
+  void Destroy() {
+    cudnn_assert(cudnnDestroyFilterDescriptor(filter_descriptor));
+  }
+};
+
+class Handle {
+  cudnnHandle_t handle;
+public:
+  void Create() {
+    cudnnCreate(&handle);
+  }
+  operator cudnnHandle_t() const { return handle; }
+  void Destroy() {
+    cudnn_assert(cudnnDestroy(handle));
+  }
+};
+
+typedef float Type;
+class Tensor: public TensorDescriptor {
+public:
+  int batch_size, depth, height, width;
+  void* data;
+
+  void Create(int batch_size, int depth, int height, int width, const void* data = NULL, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
+    TensorDescriptor::Create(batch_size, depth, height, width, type, format);
+    this->batch_size = batch_size;
+    this->depth = depth;
+    this->height = height;
+    this->width = width;
+    cuda_assert(cudaMalloc(&this->data, Size()));
+    if (data) SetData(data);
+  }
+  int Size() const { return batch_size * depth * height * width * sizeof(Type); }
+  void SetData(const void* data) {
+    cuda_assert(cudaMemcpy(this->data, data, Size(), cudaMemcpyHostToDevice));
+  }
+  void* Data(void* data) const {
+    cuda_assert(cudaMemcpy(data, this->data, Size(), cudaMemcpyDeviceToHost));
+    return data;
+  }
+  void Destroy() {
+    cuda_assert(cudaFree(data));
+    TensorDescriptor::Destroy();
+  }
+};
+
+class Filter: public FilterDescriptor {
+public:
+  int output_depth, input_depth, height, width;
+  void* data;
+
+  void Create(int output_depth, int input_depth, int height, int width, const void* data = NULL, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
+    FilterDescriptor::Create(output_depth, input_depth, height, width, type, format);
+    this->output_depth = output_depth;
+    this->input_depth = input_depth;
+    this->height = height;
+    this->width = width;
+    cuda_assert(cudaMalloc(&this->data, Size()));
+    if (data) SetData(data);
+  }
+  int Size() const { return output_depth * input_depth * height * width * sizeof(Type); }
+  void SetData(const void* data) {
+    cuda_assert(cudaMemcpy(this->data, data, Size(), cudaMemcpyHostToDevice));
+  }
+  void* Data(void* data) const {
+    cuda_assert(cudaMemcpy(data, this->data, Size(), cudaMemcpyDeviceToHost));
+    return data;
+  }
+  void Destroy() {
+    cuda_assert(cudaFree(data));
+    FilterDescriptor::Destroy();
+  }
+};
+
+class CrossCorrelation: public ConvolutionDescriptor {
+  Handle handle;
+  cudnnConvolutionFwdAlgo_t convolution_algorithm;
+  size_t workspace_size = 0;
+  void* workspace_data_device = NULL;
+public:
+  void Create(cudnnDataType_t type = CUDNN_DATA_FLOAT) {
+    ConvolutionDescriptor::Create(type);
+    handle.Create();
+    convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
+  }
+  void Configure(const Tensor& input, const Filter& filter, Tensor& output) {
+    convolution_algorithm = FindAlgorithm(handle, input, filter, output);
+    printf("convolution_algorithm = %d\n", convolution_algorithm);
+
+    workspace_size = WorkspaceSize(handle, input, filter, output, convolution_algorithm);
+    printf("workspace_size = %lu\n", workspace_size);
+    cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
+  }
+  void* Run(const Tensor& input, const Filter& filter, Tensor& output) {
+    Forward(
+      handle,
+      input, input.data,
+      filter, filter.data,
+      *this, convolution_algorithm, workspace_data_device, workspace_size,
+      output, output.data
+    );
+    cudaDeviceSynchronize();
+    return output.data;
+  }
+  void Destroy() {
+    if (workspace_data_device) cuda_assert(cudaFree(workspace_data_device));
+    handle.Destroy();
+    ConvolutionDescriptor::Destroy();
+  }
+};
+
 int main() {
   cudnnDataType_t type = CUDNN_DATA_FLOAT;
   typedef float Type;
 
-  cudnnConvolutionDescriptor_t convolution_descriptor;
-  {
-    cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-    cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, type));
-  }
-
   cv::Mat image = load_image("input.png");
-  const int batch_size = 1, input_channels = image.channels(), input_height = image.rows, input_width = image.cols;
-  cudnnTensorDescriptor_t input_descriptor;
-  {
-    cudnn_assert(cudnnCreateTensorDescriptor(&input_descriptor));
-    cudnn_assert(cudnnSetTensor4dDescriptor(input_descriptor, CUDNN_TENSOR_NHWC, type, batch_size, input_channels, input_height, input_width));
-  }
-
-  const int filter_output_count = 1, filter_input_count = input_channels, filter_height = 3, filter_width = 3;
-  cudnnFilterDescriptor_t filter_descriptor;
-  {
-    cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
-    cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, type, CUDNN_TENSOR_NCHW, filter_output_count, filter_input_count, filter_height, filter_width));
-  }
-
-  int output_batch_size, output_channels, output_height, output_width;
-  {
-    cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &output_batch_size, &output_channels, &output_height, &output_width));
-    assert(output_batch_size==batch_size);
-    assert(output_channels==filter_output_count);
-  }
-  cudnnTensorDescriptor_t output_descriptor;
-  {
-    cudnn_assert(cudnnCreateTensorDescriptor(&output_descriptor));
-    cudnn_assert(cudnnSetTensor4dDescriptor(output_descriptor, CUDNN_TENSOR_NHWC, type, batch_size, output_channels, output_height, output_width));
-  }
-
-  cudnnHandle_t handle;
-  {
-    cudnnCreate(&handle);
-  }
-
-  cudnnConvolutionFwdAlgo_t convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
-  if (1) {
-    cudnnConvolutionFwdAlgoPerf_t performance_result;
-    int count;
-    cudnn_assert(cudnnFindConvolutionForwardAlgorithm(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
-    convolution_algorithm = performance_result.algo;
-  }
-  printf("convolution_algorithm = %d\n", convolution_algorithm);
-
-  size_t workspace_size = 0;
-  {
-    cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
-    printf("workspace_size = %lu\n", workspace_size);
-  }
-  void* workspace_data_device = NULL;
-  {
-    cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
-  }
-
-  void* input_data = image.ptr();
-  void* input_data_device = NULL;
-  {
-    int input_data_size = batch_size * input_channels * input_height * input_width * sizeof(Type);
-    cuda_assert(cudaMalloc(&input_data_device, input_data_size));
-    cuda_assert(cudaMemcpy(input_data_device, input_data, input_data_size, cudaMemcpyHostToDevice));
-  }
-
-  void* filter_data_device = NULL;
-  {
-    Type filter_data[filter_output_count][filter_input_count][filter_height][filter_width];
-    const Type filter_template[filter_height][filter_width] = {
-      {1, 1, 1},
-      {1, -8, 1},
-      {1, 1, 1}
-    };
-
-    for (int o = 0; o<filter_output_count; ++o) {
-      for (int i = 0; i<filter_input_count; ++i) {
-        memcpy(filter_data[o][i], filter_template, sizeof filter_template);
+  Tensor input;
+  input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), type, CUDNN_TENSOR_NHWC);
+  Filter filter;
+  filter.Create(1, input.depth, 3, 3, NULL, type, CUDNN_TENSOR_NCHW);
+  auto filter_data = []()->const void* {
+    static  Type data[1][3][3][3] = {{
+      {
+        {1, 1, 1},
+        {1, -8, 1},
+        {1, 1, 1},
+      },
+      {
+        {1, 1, 1},
+        {1, -8, 1},
+        {1, 1, 1},
+      },
+      {
+        {1, 1, 1},
+        {1, -8, 1},
+        {1, 1, 1},
       }
-    }
+    }};
+    return data;
+  };
+  filter.SetData(filter_data());
+  Tensor output;
+  output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, NULL, type, CUDNN_TENSOR_NHWC);
 
-    cuda_assert(cudaMalloc(&filter_data_device, sizeof filter_data));
-    cuda_assert(cudaMemcpy(filter_data_device, filter_data, sizeof filter_data, cudaMemcpyHostToDevice));
-  }
+  CrossCorrelation cross_correlation;
+  cross_correlation.Create(type);
+  cross_correlation.Configure(input, filter, output);
+  cross_correlation.Run(input, filter, output);
 
-  void *output_data = NULL;
-  void* output_data_device = NULL;
-  {
-    int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(Type);
-    output_data = malloc(output_data_size);
-    cuda_assert(cudaMalloc(&output_data_device, output_data_size));
-    cuda_assert(cudaMemset(output_data_device, 0, output_data_size));
-  }
-
-
-  const float alpha = 1.0f, beta = 0.0f;
-  cudnn_assert(cudnnConvolutionForward(
-    handle, &alpha,
-    input_descriptor, input_data_device,
-    filter_descriptor, filter_data_device,
-    convolution_descriptor, convolution_algorithm, workspace_data_device, workspace_size,
-    &beta,
-    output_descriptor, output_data_device
-  ));
-  cudaDeviceSynchronize();
-
-
-  {
-    int output_data_size = batch_size * output_channels * output_height * output_width * sizeof(Type);
-    cuda_assert(cudaMemcpy(output_data, output_data_device, output_data_size, cudaMemcpyDeviceToHost));
-    save_image(output_data, output_height, output_width, "output.png");
-  }
-
-  cuda_assert(cudaFree(output_data_device));
+  void* output_data = malloc(output.Size());
+  output.Data(output_data);
+  save_image(output_data, output.height, output.width, "output.png");
   free(output_data);
-  cuda_assert(cudaFree(filter_data_device));
-  cuda_assert(cudaFree(input_data_device));
-  cuda_assert(cudaFree(workspace_data_device));
 
-  cudnnDestroy(handle);
-
-  cudnnDestroyTensorDescriptor(output_descriptor);
-  cudnnDestroyFilterDescriptor(filter_descriptor);
-  cudnnDestroyTensorDescriptor(input_descriptor);
-  cudnnDestroyConvolutionDescriptor(convolution_descriptor);
+  cross_correlation.Destroy();
+  output.Destroy();
+  filter.Destroy();
+  input.Destroy();
 }
