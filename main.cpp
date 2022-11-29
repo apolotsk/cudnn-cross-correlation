@@ -126,60 +126,59 @@ enum Format {
   NHWC = CUDNN_TENSOR_NHWC,
 };
 
-template <typename T>
-class Tensor: public TensorDescriptor {
+class Data {
 public:
-  int batch_size, depth, height, width;
+  size_t size;
   void* data;
-
-  void Create(int batch_size, int depth, int height, int width, const void* data = NULL, Format format = NCHW) {
-    TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
-    this->batch_size = batch_size;
-    this->depth = depth;
-    this->height = height;
-    this->width = width;
-    cuda_assert(cudaMalloc(&this->data, Size()));
-    if (data) SetData(data);
+  void Create(size_t size, const void* data = NULL) {
+    this->size = size;
+    cuda_assert(cudaMalloc(&this->data, size));
+    if (data) CopyTo(data);
   }
-  int Size() const { return batch_size * depth * height * width * sizeof(T); }
-  void SetData(const void* data) {
-    cuda_assert(cudaMemcpy(this->data, data, Size(), cudaMemcpyHostToDevice));
+  void CopyTo(const void* data) {
+    cuda_assert(cudaMemcpy(this->data, data, size, cudaMemcpyHostToDevice));
   }
-  void* Data(void* data) const {
-    cuda_assert(cudaMemcpy(data, this->data, Size(), cudaMemcpyDeviceToHost));
+  void* CopyFrom(void* data) const {
+    cuda_assert(cudaMemcpy(data, this->data, size, cudaMemcpyDeviceToHost));
     return data;
   }
   void Destroy() {
     cuda_assert(cudaFree(data));
+  }
+};
+
+template <typename T>
+class Tensor: public TensorDescriptor, public Data {
+public:
+  int batch_size, depth, height, width;
+  void Create(int batch_size, int depth, int height, int width, const void* data = NULL, Format format = NCHW) {
+    TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
+    Data::Create(batch_size * depth * height * width * sizeof(T), data);
+    this->batch_size = batch_size;
+    this->depth = depth;
+    this->height = height;
+    this->width = width;
+  }
+  void Destroy() {
+    Data::Destroy();
     TensorDescriptor::Destroy();
   }
 };
 
 template <typename T>
-class Filter: public FilterDescriptor {
+class Filter: public FilterDescriptor, public Data {
 public:
   int output_depth, input_depth, height, width;
-  void* data;
-
   void Create(int output_depth, int input_depth, int height, int width, const void* data = NULL, Format format = NCHW) {
     FilterDescriptor::Create(output_depth, input_depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
+    Data::Create(output_depth * input_depth * height * width * sizeof(T), data);
     this->output_depth = output_depth;
     this->input_depth = input_depth;
     this->height = height;
     this->width = width;
-    cuda_assert(cudaMalloc(&this->data, Size()));
-    if (data) SetData(data);
-  }
-  int Size() const { return output_depth * input_depth * height * width * sizeof(T); }
-  void SetData(const void* data) {
-    cuda_assert(cudaMemcpy(this->data, data, Size(), cudaMemcpyHostToDevice));
-  }
-  void* Data(void* data) const {
-    cuda_assert(cudaMemcpy(data, this->data, Size(), cudaMemcpyDeviceToHost));
-    return data;
   }
   void Destroy() {
-    cuda_assert(cudaFree(data));
+    Data::Destroy();
     FilterDescriptor::Destroy();
   }
 };
@@ -246,7 +245,7 @@ int main() {
     }};
     return data;
   };
-  filter.SetData(filter_data());
+  filter.CopyTo(filter_data());
   Tensor<float> output;
   output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, NULL, NHWC);
 
@@ -255,8 +254,8 @@ int main() {
   cross_correlation.Configure(input, filter, output);
   cross_correlation.Run(input, filter, output);
 
-  void* output_data = malloc(output.Size());
-  output.Data(output_data);
+  void* output_data = malloc(output.size);
+  output.CopyFrom(output_data);
   save_image(output_data, output.height, output.width, "output.png");
   free(output_data);
 
