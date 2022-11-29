@@ -98,7 +98,6 @@ public:
     cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
     cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, type, format, output_count, input_count, height, width));
   }
-
   operator cudnnFilterDescriptor_t() const { return filter_descriptor; }
   void Destroy() {
     cudnn_assert(cudnnDestroyFilterDescriptor(filter_descriptor));
@@ -117,14 +116,19 @@ public:
   }
 };
 
-typedef float Type;
+typedef __fp16 half;
+template <typename T> cudnnDataType_t data_type;
+template <> cudnnDataType_t data_type<float> = CUDNN_DATA_FLOAT;
+template <> cudnnDataType_t data_type<half> = CUDNN_DATA_HALF;
+
+template <typename T>
 class Tensor: public TensorDescriptor {
 public:
   int batch_size, depth, height, width;
   void* data;
 
-  void Create(int batch_size, int depth, int height, int width, const void* data = NULL, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
-    TensorDescriptor::Create(batch_size, depth, height, width, type, format);
+  void Create(int batch_size, int depth, int height, int width, const void* data = NULL, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
+    TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, format);
     this->batch_size = batch_size;
     this->depth = depth;
     this->height = height;
@@ -132,7 +136,7 @@ public:
     cuda_assert(cudaMalloc(&this->data, Size()));
     if (data) SetData(data);
   }
-  int Size() const { return batch_size * depth * height * width * sizeof(Type); }
+  int Size() const { return batch_size * depth * height * width * sizeof(T); }
   void SetData(const void* data) {
     cuda_assert(cudaMemcpy(this->data, data, Size(), cudaMemcpyHostToDevice));
   }
@@ -146,13 +150,14 @@ public:
   }
 };
 
+template <typename T>
 class Filter: public FilterDescriptor {
 public:
   int output_depth, input_depth, height, width;
   void* data;
 
-  void Create(int output_depth, int input_depth, int height, int width, const void* data = NULL, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
-    FilterDescriptor::Create(output_depth, input_depth, height, width, type, format);
+  void Create(int output_depth, int input_depth, int height, int width, const void* data = NULL, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
+    FilterDescriptor::Create(output_depth, input_depth, height, width, data_type<T>, format);
     this->output_depth = output_depth;
     this->input_depth = input_depth;
     this->height = height;
@@ -160,7 +165,7 @@ public:
     cuda_assert(cudaMalloc(&this->data, Size()));
     if (data) SetData(data);
   }
-  int Size() const { return output_depth * input_depth * height * width * sizeof(Type); }
+  int Size() const { return output_depth * input_depth * height * width * sizeof(T); }
   void SetData(const void* data) {
     cuda_assert(cudaMemcpy(this->data, data, Size(), cudaMemcpyHostToDevice));
   }
@@ -174,18 +179,19 @@ public:
   }
 };
 
+template <typename T>
 class CrossCorrelation: public ConvolutionDescriptor {
   Handle handle;
   cudnnConvolutionFwdAlgo_t convolution_algorithm;
   size_t workspace_size = 0;
   void* workspace_data_device = NULL;
 public:
-  void Create(cudnnDataType_t type = CUDNN_DATA_FLOAT) {
-    ConvolutionDescriptor::Create(type);
+  void Create() {
+    ConvolutionDescriptor::Create(data_type<T>);
     handle.Create();
     convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
   }
-  void Configure(const Tensor& input, const Filter& filter, Tensor& output) {
+  void Configure(const Tensor<T>& input, const Filter<T>& filter, Tensor<T>& output) {
     convolution_algorithm = FindAlgorithm(handle, input, filter, output);
     printf("convolution_algorithm = %d\n", convolution_algorithm);
 
@@ -193,7 +199,7 @@ public:
     printf("workspace_size = %lu\n", workspace_size);
     cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
   }
-  void* Run(const Tensor& input, const Filter& filter, Tensor& output) {
+  void* Run(const Tensor<T>& input, const Filter<T>& filter, Tensor<T>& output) {
     Forward(
       handle,
       input, input.data,
@@ -212,16 +218,13 @@ public:
 };
 
 int main() {
-  cudnnDataType_t type = CUDNN_DATA_FLOAT;
-  typedef float Type;
-
   cv::Mat image = load_image("input.png");
-  Tensor input;
-  input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), type, CUDNN_TENSOR_NHWC);
-  Filter filter;
-  filter.Create(1, input.depth, 3, 3, NULL, type, CUDNN_TENSOR_NCHW);
+  Tensor<float> input;
+  input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), CUDNN_TENSOR_NHWC);
+  Filter<float> filter;
+  filter.Create(1, input.depth, 3, 3, NULL, CUDNN_TENSOR_NCHW);
   auto filter_data = []()->const void* {
-    static  Type data[1][3][3][3] = {{
+    static float data[1][3][3][3] = {{
       {
         {1, 1, 1},
         {1, -8, 1},
@@ -241,11 +244,11 @@ int main() {
     return data;
   };
   filter.SetData(filter_data());
-  Tensor output;
-  output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, NULL, type, CUDNN_TENSOR_NHWC);
+  Tensor<float> output;
+  output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, NULL, CUDNN_TENSOR_NHWC);
 
-  CrossCorrelation cross_correlation;
-  cross_correlation.Create(type);
+  CrossCorrelation<float> cross_correlation;
+  cross_correlation.Create();
   cross_correlation.Configure(input, filter, output);
   cross_correlation.Run(input, filter, output);
 
