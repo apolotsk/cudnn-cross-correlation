@@ -121,14 +121,19 @@ template <typename T> cudnnDataType_t data_type;
 template <> cudnnDataType_t data_type<float> = CUDNN_DATA_FLOAT;
 template <> cudnnDataType_t data_type<half> = CUDNN_DATA_HALF;
 
+enum Format {
+  NCHW = CUDNN_TENSOR_NCHW,
+  NHWC = CUDNN_TENSOR_NHWC,
+};
+
 template <typename T>
 class Tensor: public TensorDescriptor {
 public:
   int batch_size, depth, height, width;
   void* data;
 
-  void Create(int batch_size, int depth, int height, int width, const void* data = NULL, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
-    TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, format);
+  void Create(int batch_size, int depth, int height, int width, const void* data = NULL, Format format = NCHW) {
+    TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
     this->batch_size = batch_size;
     this->depth = depth;
     this->height = height;
@@ -156,8 +161,8 @@ public:
   int output_depth, input_depth, height, width;
   void* data;
 
-  void Create(int output_depth, int input_depth, int height, int width, const void* data = NULL, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
-    FilterDescriptor::Create(output_depth, input_depth, height, width, data_type<T>, format);
+  void Create(int output_depth, int input_depth, int height, int width, const void* data = NULL, Format format = NCHW) {
+    FilterDescriptor::Create(output_depth, input_depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
     this->output_depth = output_depth;
     this->input_depth = input_depth;
     this->height = height;
@@ -220,9 +225,9 @@ public:
 int main() {
   cv::Mat image = load_image("input.png");
   Tensor<float> input;
-  input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), CUDNN_TENSOR_NHWC);
+  input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), NHWC);
   Filter<float> filter;
-  filter.Create(1, input.depth, 3, 3, NULL, CUDNN_TENSOR_NCHW);
+  filter.Create(1, input.depth, 3, 3, NULL);
   auto filter_data = []()->const void* {
     static float data[1][3][3][3] = {{
       {
@@ -245,7 +250,7 @@ int main() {
   };
   filter.SetData(filter_data());
   Tensor<float> output;
-  output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, NULL, CUDNN_TENSOR_NHWC);
+  output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, NULL, NHWC);
 
   CrossCorrelation<float> cross_correlation;
   cross_correlation.Create();
