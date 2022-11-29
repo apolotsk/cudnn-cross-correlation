@@ -198,10 +198,8 @@ public:
   }
   void Configure(const Tensor<T>& input, const Filter<T>& filter, Tensor<T>& output) {
     convolution_algorithm = FindAlgorithm(handle, input, filter, output);
-    printf("convolution_algorithm = %d\n", convolution_algorithm);
 
     workspace_size = WorkspaceSize(handle, input, filter, output, convolution_algorithm);
-    printf("workspace_size = %lu\n", workspace_size);
     cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
   }
   void* Run(const Tensor<T>& input, const Filter<T>& filter, Tensor<T>& output) {
