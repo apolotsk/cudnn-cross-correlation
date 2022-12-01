@@ -3,7 +3,7 @@
 #include <Rand.hpp>
 #include "Convolution.hpp"
 int main() {
-  typedef half type;
+  typedef float type;
   Tensor<type> input;
   input.Create(1, 1, 128, 128, NULL, NCHW);
   void* input_data = malloc(input.size);
@@ -21,7 +21,7 @@ int main() {
   Tensor<type> output;
   output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, NULL, NCHW);
 
-  CrossCorrelation<type> cross_correlation;
+  CrossCorrelation<float> cross_correlation;
   cross_correlation.Create();
   cross_correlation.Configure(input, filter, output);
   cross_correlation.Run(input, filter, output);
@@ -31,7 +31,7 @@ int main() {
   for (int i = 0; i<count; ++i) {
     cross_correlation.Run(input, filter, output);
   }
-  printf("time = %.2f ms\n", stopwatch.Time()/count*1e3);
+  printf("time = %.2f ms\n", stopwatch.Time()/count*1e3); // Jetson Nano: 27.20 ms.
 
   cross_correlation.Destroy();
   output.Destroy();

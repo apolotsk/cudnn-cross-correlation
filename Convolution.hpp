@@ -82,13 +82,15 @@ public:
     handle.Create();
     convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
   }
-  void Configure(const Tensor<T>& input, const Filter<T>& filter, Tensor<T>& output) {
+  template <typename T2>
+  void Configure(const Tensor<T2>& input, const Filter<T2>& filter, Tensor<T2>& output) {
     convolution_algorithm = FindAlgorithm(handle, input, filter, output);
 
     workspace_size = WorkspaceSize(handle, input, filter, output, convolution_algorithm);
     cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
   }
-  void* Run(const Tensor<T>& input, const Filter<T>& filter, Tensor<T>& output) {
+  template <typename T2>
+  void* Run(const Tensor<T2>& input, const Filter<T2>& filter, Tensor<T2>& output) {
     Forward(
       handle,
       input, input.data,
