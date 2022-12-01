@@ -1,4 +1,4 @@
-#include <string.h> // For `malloc()`.
+#include <string.h> // For `malloc()`, `free()`.
 #include <Stopwatch.hpp>
 #include <Rand.hpp>
 #include "Convolution.hpp"
