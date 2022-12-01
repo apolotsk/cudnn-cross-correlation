@@ -31,7 +31,7 @@ int main() {
   for (int i = 0; i<count; ++i) {
     cross_correlation.Run(input, filter, output);
   }
-  printf("time = %.2f ms\n", stopwatch.Time()/count*1e3); // Jetson Nano: 27.20 ms.
+  printf("time = %.1f ms\n", stopwatch.Time()/count*1e3); // Jetson Nano: 27.2 ms.
 
   cross_correlation.Destroy();
   output.Destroy();
