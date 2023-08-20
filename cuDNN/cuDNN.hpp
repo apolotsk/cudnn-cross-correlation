@@ -5,7 +5,7 @@
 #include <tuple>
 #include <cudnn.h>
 
-namespace cudnn {
+namespace cuDNN {
 
 void _cudnn_assert(cudnnStatus_t status, const char* call_file, unsigned int call_line, const char* expression) {
   if (status==CUDNN_STATUS_SUCCESS) return;

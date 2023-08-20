@@ -1,5 +1,5 @@
 #include <string.h> // For `malloc()`, `free()`.
-#include <Convolution.hpp>
+#include <CrossCorrelation.hpp>
 #include "Stopwatch.hpp"
 #include "Rand.hpp"
 

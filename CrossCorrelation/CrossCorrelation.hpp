@@ -1,7 +1,7 @@
 #pragma once
 #include <cuda_runtime.h> // For cuda*.
 #include <cudart.hpp> // For cuda_assert.
-#include <cudnn.hpp> // For cudnn::*.
+#include <cuDNN.hpp> // For cuDNN::*.
 
 typedef __fp16 half;
 template <typename T> cudnnDataType_t data_type;
@@ -36,11 +36,11 @@ public:
 };
 
 template <typename T>
-class Tensor: public cudnn::TensorDescriptor, public Data {
+class Tensor: public cuDNN::TensorDescriptor, public Data {
 public:
   int batch_size, depth, height, width;
   void Create(int batch_size, int depth, int height, int width, const void* data = NULL, Format format = NCHW) {
-    cudnn::TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
+    cuDNN::TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
     Data::Create(batch_size * depth * height * width * sizeof(T), data);
     this->batch_size = batch_size;
     this->depth = depth;
@@ -49,16 +49,16 @@ public:
   }
   void Destroy() {
     Data::Destroy();
-    cudnn::TensorDescriptor::Destroy();
+    cuDNN::TensorDescriptor::Destroy();
   }
 };
 
 template <typename T>
-class Filter: public cudnn::FilterDescriptor, public Data {
+class Filter: public cuDNN::FilterDescriptor, public Data {
 public:
   int output_depth, input_depth, height, width;
   void Create(int output_depth, int input_depth, int height, int width, const void* data = NULL, Format format = NCHW) {
-    cudnn::FilterDescriptor::Create(output_depth, input_depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
+    cuDNN::FilterDescriptor::Create(output_depth, input_depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
     Data::Create(output_depth * input_depth * height * width * sizeof(T), data);
     this->output_depth = output_depth;
     this->input_depth = input_depth;
@@ -67,19 +67,19 @@ public:
   }
   void Destroy() {
     Data::Destroy();
-    cudnn::FilterDescriptor::Destroy();
+    cuDNN::FilterDescriptor::Destroy();
   }
 };
 
 template <typename T>
-class CrossCorrelation: public cudnn::ConvolutionDescriptor {
-  cudnn::Handle handle;
+class CrossCorrelation: public cuDNN::ConvolutionDescriptor {
+  cuDNN::Handle handle;
   cudnnConvolutionFwdAlgo_t convolution_algorithm;
   size_t workspace_size = 0;
   void* workspace_data_device = NULL;
 public:
   void Create() {
-    cudnn::ConvolutionDescriptor::Create(data_type<T>);
+    cuDNN::ConvolutionDescriptor::Create(data_type<T>);
     handle.Create();
     convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
   }
@@ -105,7 +105,7 @@ public:
   void Destroy() {
     if (workspace_data_device) cuda_assert(cudaFree(workspace_data_device));
     handle.Destroy();
-    cudnn::ConvolutionDescriptor::Destroy();
+    cuDNN::ConvolutionDescriptor::Destroy();
   }
 };
 

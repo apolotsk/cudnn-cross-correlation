@@ -1,0 +1,4 @@
+add_library(CrossCorrelation STATIC CrossCorrelation.hpp)
+set_target_properties(CrossCorrelation PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(CrossCorrelation INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(CrossCorrelation INTERFACE cudart cuDNN)

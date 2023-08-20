@@ -1,2 +1,2 @@
 add_executable(MeasureSpeed MeasureSpeed.cpp)
-target_link_libraries(MeasureSpeed PUBLIC Convolution)
+target_link_libraries(MeasureSpeed PUBLIC CrossCorrelation)
