@@ -4,7 +4,7 @@ template <typename T> void rand(void* data, int count) {
   for (int i = 0; i<count; ++i) ((T*)data)[i] = rand<T>();
 }
 
-#include <chrono> // For `std::chrono`.
+#include <chrono> // For std::chrono.
 double timestamp() {
   std::chrono::steady_clock::time_point time_point = std::chrono::steady_clock::now();
   return std::chrono::duration<double>(time_point.time_since_epoch()).count();
