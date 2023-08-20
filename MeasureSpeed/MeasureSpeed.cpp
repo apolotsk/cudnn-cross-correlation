@@ -1,7 +1,7 @@
 #include <string.h> // For `malloc()`, `free()`.
-#include <Stopwatch.hpp>
-#include <Rand.hpp>
-#include "Convolution.hpp"
+#include <Convolution.hpp>
+#include "Stopwatch.hpp"
+#include "Rand.hpp"
 
 int main() {
   typedef float type;

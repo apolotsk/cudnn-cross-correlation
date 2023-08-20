@@ -16,7 +16,7 @@ void save_image(const void* data, int height, int width, const char* filepath) {
 }
 
 #include <string.h> // For `malloc()`.
-#include "Convolution.hpp"
+#include <Convolution.hpp>
 int main() {
   cv::Mat image = load_image("input.png");
   Tensor<float> input;

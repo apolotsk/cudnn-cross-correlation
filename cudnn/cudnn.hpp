@@ -1,16 +1,19 @@
 #pragma once
-
 #include <stdio.h> // For `printf()`.
+#include <stdexcept> // For std::runtime_error().
 #include <stdlib.h> // For `exit()`.
-#include <cudnn.h>
-void _cudnn_assert(cudnnStatus_t status, int line) {
-  if (status==CUDNN_STATUS_SUCCESS) return;
-  printf("Error at line %d: %s.\n", line, cudnnGetErrorString(status));
-  exit(1);
-}
-#define cudnn_assert(status) _cudnn_assert(status, __LINE__);
-
 #include <tuple>
+#include <cudnn.h>
+
+namespace cudnn {
+
+void _cudnn_assert(cudnnStatus_t status, const char* call_file, unsigned int call_line, const char* expression) {
+  if (status==CUDNN_STATUS_SUCCESS) return;
+  printf("Assertion in %s:%d %s. %s\n", call_file, call_line, expression, cudnnGetErrorString(status));
+  throw std::runtime_error(cudnnGetErrorString(status));
+}
+#define cudnn_assert(expr) _cudnn_assert(expr, __FILE__, __LINE__, #expr);
+
 class ConvolutionDescriptor {
   cudnnConvolutionDescriptor_t convolution_descriptor;
 public:
@@ -89,3 +92,4 @@ public:
   }
 };
 
+}
