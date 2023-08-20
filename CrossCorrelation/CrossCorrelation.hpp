@@ -1,18 +1,7 @@
 #pragma once
+
 #include <cuda_runtime.h> // For cuda*.
 #include <cudart.hpp> // For cuda_assert.
-#include <cuDNN.hpp> // For cuDNN::*.
-
-typedef __fp16 half;
-template <typename T> cudnnDataType_t data_type;
-template <> cudnnDataType_t data_type<half> = CUDNN_DATA_HALF;
-template <> cudnnDataType_t data_type<float> = CUDNN_DATA_FLOAT;
-template <> cudnnDataType_t data_type<double> = CUDNN_DATA_DOUBLE;
-
-enum Format {
-  NCHW = CUDNN_TENSOR_NCHW,
-  NHWC = CUDNN_TENSOR_NHWC,
-};
 
 class DeviceData {
   size_t size;
@@ -38,6 +27,21 @@ public:
     if (data) cuda_assert(cudaFree(data));
   }
 };
+
+#include <cudnn.h> // For cudnn*, CUDNN_*.
+
+typedef __fp16 half;
+template <typename T> cudnnDataType_t data_type;
+template <> cudnnDataType_t data_type<half> = CUDNN_DATA_HALF;
+template <> cudnnDataType_t data_type<float> = CUDNN_DATA_FLOAT;
+template <> cudnnDataType_t data_type<double> = CUDNN_DATA_DOUBLE;
+
+enum Format {
+  NCHW = CUDNN_TENSOR_NCHW,
+  NHWC = CUDNN_TENSOR_NHWC,
+};
+
+#include <cuDNN.hpp> // For cuDNN::*.
 
 template <typename T>
 class Tensor: public cuDNN::TensorDescriptor, public DeviceData {
