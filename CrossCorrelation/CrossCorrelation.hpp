@@ -77,7 +77,7 @@ class CrossCorrelation: public cuDNN::ConvolutionDescriptor {
   void* workspace_data_device = nullptr;
 public:
   void Create() {
-    cuDNN::ConvolutionDescriptor::Create(data_type<T>);
+    cuDNN::ConvolutionDescriptor::Create(data_type<T>, CUDNN_CROSS_CORRELATION);
     handle.Create();
   }
   template <typename T2>

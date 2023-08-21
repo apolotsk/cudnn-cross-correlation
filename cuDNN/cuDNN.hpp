@@ -16,9 +16,9 @@ void _cudnn_assert(cudnnStatus_t status, const char* call_file, unsigned int cal
 class ConvolutionDescriptor {
   cudnnConvolutionDescriptor_t convolution_descriptor;
 public:
-  void Create(cudnnDataType_t type = CUDNN_DATA_FLOAT) {
+  void Create(cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnConvolutionMode_t mode = CUDNN_CONVOLUTION) {
     cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-    cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, type));
+    cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, mode, type));
   }
   std::tuple<int,int,int,int> OutputDim(const cudnnTensorDescriptor_t& input_descriptor, const cudnnFilterDescriptor_t& filter_descriptor) {
     int batch_size, channels, height, width;
