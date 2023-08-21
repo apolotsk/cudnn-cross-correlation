@@ -81,7 +81,7 @@ public:
     handle.Create();
   }
   template <typename T2>
-  void Configure(const Tensor<T2>& input, const Filter<T2>& filter, Tensor<T2>& output) {
+  void Configure(const Tensor<T2>& input, const Filter<T2>& filter, const Tensor<T2>& output) {
     convolution_algorithm = FindAlgorithm(handle, input, filter, output);
 
     workspace_size = WorkspaceSize(handle, input, filter, output, convolution_algorithm);
