@@ -89,7 +89,7 @@ class Handle {
   cudnnHandle_t handle;
 public:
   void Create() {
-    cudnnCreate(&handle);
+    cudnn_assert(cudnnCreate(&handle));
   }
   operator cudnnHandle_t() const { return handle; }
   void Destroy() {
