@@ -31,10 +31,10 @@ public:
 #include <cudnn.h> // For cudnn*, CUDNN_*.
 
 typedef __fp16 half;
-template <typename T> cudnnDataType_t data_type;
-template <> cudnnDataType_t data_type<half> = CUDNN_DATA_HALF;
-template <> cudnnDataType_t data_type<float> = CUDNN_DATA_FLOAT;
-template <> cudnnDataType_t data_type<double> = CUDNN_DATA_DOUBLE;
+template <typename T> cudnnDataType_t type;
+template <> cudnnDataType_t type<half> = CUDNN_DATA_HALF;
+template <> cudnnDataType_t type<float> = CUDNN_DATA_FLOAT;
+template <> cudnnDataType_t type<double> = CUDNN_DATA_DOUBLE;
 
 enum Format {
   NCHW = CUDNN_TENSOR_NCHW,
@@ -47,7 +47,7 @@ template <typename T>
 class Tensor: public cuDNN::TensorDescriptor, public DeviceData {
 public:
   void Create(int batch_size, int depth, int height, int width, const void* data = nullptr, Format format = NCHW) {
-    cuDNN::TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
+    cuDNN::TensorDescriptor::Create(batch_size, depth, height, width, type<T>, (cudnnTensorFormat_t)format);
     DeviceData::Create(batch_size * depth * height * width * sizeof(T), data);
   }
   void Destroy() {
@@ -60,7 +60,7 @@ template <typename T>
 class Filter: public cuDNN::FilterDescriptor, public DeviceData {
 public:
   void Create(int output_depth, int input_depth, int height, int width, const void* data = nullptr, ::Format format = NCHW) {
-    cuDNN::FilterDescriptor::Create(output_depth, input_depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
+    cuDNN::FilterDescriptor::Create(output_depth, input_depth, height, width, type<T>, (cudnnTensorFormat_t)format);
     DeviceData::Create(output_depth * input_depth * height * width * sizeof(T), data);
   }
   void Destroy() {
@@ -77,7 +77,7 @@ class CrossCorrelation: public cuDNN::ConvolutionDescriptor {
   void* workspace_data_device = nullptr;
 public:
   void Create() {
-    cuDNN::ConvolutionDescriptor::Create(data_type<T>, CUDNN_CROSS_CORRELATION);
+    cuDNN::ConvolutionDescriptor::Create(type<T>, CUDNN_CROSS_CORRELATION);
     handle.Create();
   }
   template <typename T2>
