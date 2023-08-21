@@ -1,38 +1,11 @@
 #pragma once
-
 #include <cudart.hpp> // For cuda_assert.
-
-class DeviceData {
-  size_t size;
-  void* data = nullptr;
-public:
-  void Create(size_t size, const void* data = nullptr) {
-    this->size = size;
-    cuda_assert(cudaMalloc(&this->data, size));
-    if (data) CopyFrom(data);
-  }
-  size_t Size() const { return size; }
-  void* Data() { return data; }
-  const void* Data() const { return data; }
-
-  void CopyFrom(const void* data) {
-    cuda_assert(cudaMemcpy(this->data, data, size, cudaMemcpyHostToDevice));
-  }
-  void* CopyTo(void* data) const {
-    cuda_assert(cudaMemcpy(data, this->data, size, cudaMemcpyDeviceToHost));
-    return data;
-  }
-  void Destroy() {
-    if (data) cuda_assert(cudaFree(data));
-  }
-};
-
 #include <cuDNN.hpp> // For cuDNN::*.
 
 typedef cuDNN::Format Format;
 
 template <typename T>
-class Tensor: public cuDNN::TensorDescriptor, public DeviceData {
+class Tensor: public cuDNN::TensorDescriptor, public cudart::DeviceData {
 public:
   void Create(int batch_size, int depth, int height, int width, const void* data = nullptr, Format format = Format::NCHW) {
     cuDNN::TensorDescriptor::Create<T>(batch_size, depth, height, width, format);
@@ -45,7 +18,7 @@ public:
 };
 
 template <typename T>
-class Filter: public cuDNN::FilterDescriptor, public DeviceData {
+class Filter: public cuDNN::FilterDescriptor, public cudart::DeviceData {
 public:
   void Create(int output_depth, int input_depth, int height, int width, const void* data = nullptr, Format format = Format::NCHW) {
     cuDNN::FilterDescriptor::Create<T>(output_depth, input_depth, height, width, format);
@@ -61,7 +34,7 @@ template <typename T>
 class CrossCorrelation: public cuDNN::ConvolutionDescriptor {
   cuDNN::Handle handle;
   cudnnConvolutionFwdAlgo_t convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
-  DeviceData workspace;
+  cudart::DeviceData workspace;
 public:
   void Create() {
     cuDNN::ConvolutionDescriptor::Create<T>(CUDNN_CROSS_CORRELATION);
