@@ -61,8 +61,7 @@ template <typename T>
 class CrossCorrelation: public cuDNN::ConvolutionDescriptor {
   cuDNN::Handle handle;
   cudnnConvolutionFwdAlgo_t convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
-  size_t workspace_size = 0;
-  void* workspace_data_device = nullptr;
+  DeviceData workspace;
 public:
   void Create() {
     cuDNN::ConvolutionDescriptor::Create<T>(CUDNN_CROSS_CORRELATION);
@@ -71,9 +70,7 @@ public:
   template <typename T2>
   void Configure(const Tensor<T2>& input, const Filter<T2>& filter, const Tensor<T2>& output) {
     convolution_algorithm = FindAlgorithm(handle, input, filter, output);
-
-    workspace_size = WorkspaceSize(handle, input, filter, output, convolution_algorithm);
-    cuda_assert(cudaMalloc(&workspace_data_device, workspace_size));
+    workspace.Create(WorkspaceSize(handle, input, filter, output, convolution_algorithm));
   }
   template <typename T2>
   void* Run(const Tensor<T2>& input, const Filter<T2>& filter, Tensor<T2>& output) {
@@ -81,14 +78,14 @@ public:
       handle,
       input, input.Data(),
       filter, filter.Data(),
-      *this, convolution_algorithm, workspace_data_device, workspace_size,
+      *this, convolution_algorithm, workspace.Data(), workspace.Size(),
       output, output.Data()
     );
     cudaDeviceSynchronize();
     return output.Data();
   }
   void Destroy() {
-    if (workspace_data_device) cuda_assert(cudaFree(workspace_data_device));
+    workspace.Destroy();
     handle.Destroy();
     cuDNN::ConvolutionDescriptor::Destroy();
   }
