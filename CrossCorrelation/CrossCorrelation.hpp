@@ -15,9 +15,9 @@ enum Format {
 };
 
 class DeviceData {
-public:
   size_t size;
   void* data = NULL;
+public:
   void Create(size_t size, const void* data = NULL) {
     this->size = size;
     cuda_assert(cudaMalloc(&this->data, size));
@@ -30,6 +30,9 @@ public:
     cuda_assert(cudaMemcpy(data, this->data, size, cudaMemcpyDeviceToHost));
     return data;
   }
+  size_t Size() const { return size; }
+  void* Data() { return data; }
+  const void* Data() const { return data; }
   void Destroy() {
     if (data) cuda_assert(cudaFree(data));
   }
@@ -94,13 +97,13 @@ public:
   void* Run(const Tensor<T2>& input, const Filter<T2>& filter, Tensor<T2>& output) {
     Forward(
       handle,
-      input, input.data,
-      filter, filter.data,
+      input, input.Data(),
+      filter, filter.Data(),
       *this, convolution_algorithm, workspace_data_device, workspace_size,
-      output, output.data
+      output, output.Data()
     );
     cudaDeviceSynchronize();
-    return output.data;
+    return output.Data();
   }
   void Destroy() {
     if (workspace_data_device) cuda_assert(cudaFree(workspace_data_device));

@@ -67,7 +67,7 @@ int main() {
   cross_correlation.Run(input, filter, output);
   printf("Cross-correlate the input tensor and the filter.\n");
 
-  void* output_data = malloc(output.size);
+  void* output_data = malloc(output.Size());
   output.CopyFrom(output_data);
   save_image(output_data, output.height, output.width, "output.png");
   printf("Save the output tensor as an image to output.png.\n");
