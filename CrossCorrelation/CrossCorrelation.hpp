@@ -40,8 +40,7 @@ public:
     cuDNN::ConvolutionDescriptor::Create<T>(CUDNN_CROSS_CORRELATION);
     handle.Create();
   }
-  template <typename T2>
-  void Configure(const Tensor<T2>& input, const Filter<T2>& filter, const Tensor<T2>& output) {
+  void Configure(const Tensor<T>& input, const Filter<T>& filter, const Tensor<T>& output) {
     convolution_algorithm = FindAlgorithm(handle, input, filter, output);
     workspace.Create(WorkspaceSize(handle, input, filter, output, convolution_algorithm));
   }
