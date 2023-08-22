@@ -15,8 +15,8 @@ void save_image(const void* data, int height, int width, const char* filepath) {
   cv::imwrite(filepath, image);
 }
 
-#include <stdio.h> // For printf.
-#include <string.h> // For malloc, free.
+#include <cstdio> // For printf.
+#include <cstring> // For malloc, free.
 #include <CrossCorrelation.hpp>
 int main() {
   Tensor<float> input;
