@@ -48,8 +48,8 @@ public:
     cudnn_assert(cudnnSetTensor4dDescriptor(tensor_descriptor, format, type, batch_size, depth, height, width));
   }
   template <typename T>
-  void Create(int batch_size, int depth, int height, int width, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
-    Create(batch_size, depth, height, width, type<T>, format);
+  void Create(int batch_size, int depth, int height, int width, Format format = NHWC) {
+    Create(batch_size, depth, height, width, type<T>, (cudnnTensorFormat_t)format);
   }
   operator cudnnTensorDescriptor_t() const { return tensor_descriptor; }
 
@@ -87,13 +87,13 @@ public:
     cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, type, format, output_depth, input_depth, height, width));
   }
   template <typename T>
-  void Create(int output_depth, int input_depth, int height, int width, cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW) {
-    Create(output_depth, input_depth, height, width, type<T>, format);
+  void Create(int output_depth, int input_depth, int height, int width, Format format = NCHW) {
+    Create(output_depth, input_depth, height, width, type<T>, (cudnnTensorFormat_t)format);
   }
   operator cudnnFilterDescriptor_t() const { return filter_descriptor; }
 
   cudnnDataType_t Type() const { return GetParameters().type; }
-  cudnnTensorFormat_t Format() const { return GetParameters().format; }
+  cudnnTensorFormat_t Format_() const { return GetParameters().format; }
   int OutputDepth() const { return GetParameters().output_depth; }
   int InputDepth() const { return GetParameters().input_depth; }
   int Height() const { return GetParameters().height; }
