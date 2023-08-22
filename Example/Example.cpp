@@ -15,7 +15,7 @@ void save_image(const void* data, int height, int width, const char* filepath) {
   cv::imwrite(filepath, image);
 }
 
-#include <string.h> // For `malloc()`.
+#include <string.h> // For malloc, free.
 #include <CrossCorrelation.hpp>
 int main() {
   cv::Mat image = load_image("input.png");
