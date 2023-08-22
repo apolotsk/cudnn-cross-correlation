@@ -17,7 +17,7 @@ enum Format {
 class Data {
 public:
   size_t size;
-  void* data;
+  void* data = NULL;
   void Create(size_t size, const void* data = NULL) {
     this->size = size;
     cuda_assert(cudaMalloc(&this->data, size));
@@ -31,7 +31,7 @@ public:
     return data;
   }
   void Destroy() {
-    cuda_assert(cudaFree(data));
+    if (data) cuda_assert(cudaFree(data));
   }
 };
 
