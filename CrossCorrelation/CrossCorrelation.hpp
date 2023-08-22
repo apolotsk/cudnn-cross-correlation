@@ -35,7 +35,7 @@ template <typename T>
 class Tensor: public cuDNN::TensorDescriptor, public DeviceData {
 public:
   void Create(int batch_size, int depth, int height, int width, const void* data = nullptr, Format format = Format::NCHW) {
-    cuDNN::TensorDescriptor::Create<T>(batch_size, depth, height, width, (cudnnTensorFormat_t)format);
+    cuDNN::TensorDescriptor::Create<T>(batch_size, depth, height, width, format);
     DeviceData::Create(batch_size * depth * height * width * sizeof(T), data);
   }
   void Destroy() {
@@ -48,7 +48,7 @@ template <typename T>
 class Filter: public cuDNN::FilterDescriptor, public DeviceData {
 public:
   void Create(int output_depth, int input_depth, int height, int width, const void* data = nullptr, Format format = Format::NCHW) {
-    cuDNN::FilterDescriptor::Create<T>(output_depth, input_depth, height, width, (cudnnTensorFormat_t)format);
+    cuDNN::FilterDescriptor::Create<T>(output_depth, input_depth, height, width, format);
     DeviceData::Create(output_depth * input_depth * height * width * sizeof(T), data);
   }
   void Destroy() {
