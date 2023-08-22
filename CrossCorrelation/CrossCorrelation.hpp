@@ -48,8 +48,7 @@ public:
     convolution_algorithm = FindAlgorithm(handle, input, filter, output);
     workspace.Create(WorkspaceSize(handle, input, filter, output, convolution_algorithm));
   }
-  template <typename T2>
-  void* Run(const Tensor<T2>& input, const Filter<T2>& filter, Tensor<T2>& output) {
+  void* Run(const Tensor<T>& input, const Filter<T>& filter, Tensor<T>& output) {
     Forward(
       handle,
       input, input.Data(),
