@@ -8,12 +8,12 @@ typedef __fp16 half;
 
 namespace cuDNN {
 
+#define cudnn_assert(expr) _cudnn_assert(expr, __FILE__, __LINE__, #expr);
 void _cudnn_assert(cudnnStatus_t status, const char* call_file, unsigned int call_line, const char* expression) {
   if (status==CUDNN_STATUS_SUCCESS) return;
   printf("Assertion in %s:%d %s. %s\n", call_file, call_line, expression, cudnnGetErrorString(status));
   throw std::runtime_error(cudnnGetErrorString(status));
 }
-#define cudnn_assert(expr) _cudnn_assert(expr, __FILE__, __LINE__, #expr);
 
 template <typename T> cudnnDataType_t type;
 template <> cudnnDataType_t type<half> = CUDNN_DATA_HALF;
