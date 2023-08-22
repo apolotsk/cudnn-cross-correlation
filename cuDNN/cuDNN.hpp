@@ -69,9 +69,9 @@ public:
 class FilterDescriptor {
   cudnnFilterDescriptor_t filter_descriptor;
 public:
-  void Create(int output_count, int input_count, int height, int width, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW) {
+  void Create(int output_depth, int input_depth, int height, int width, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW) {
     cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
-    cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, type, format, output_count, input_count, height, width));
+    cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, type, format, output_depth, input_depth, height, width));
   }
   operator cudnnFilterDescriptor_t() const { return filter_descriptor; }
   void Destroy() {
