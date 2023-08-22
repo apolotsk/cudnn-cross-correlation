@@ -55,12 +55,30 @@ public:
 
 class TensorDescriptor {
   cudnnTensorDescriptor_t tensor_descriptor;
+
+  struct Parameters {
+    cudnnDataType_t type;
+    int batch_size, depth, height, width;
+  };
+  Parameters GetParameters() const {
+    Parameters p;
+    cudnn_assert(cudnnGetTensor4dDescriptor(tensor_descriptor, &p.type, &p.batch_size, &p.depth, &p.height, &p.width, nullptr, nullptr, nullptr, nullptr));
+    return p;
+  }
+
 public:
   void Create(int batch_size, int depth, int height, int width, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
     cudnn_assert(cudnnCreateTensorDescriptor(&tensor_descriptor));
-    cudnn_assert(cudnnSetTensor4dDescriptor(tensor_descriptor, format, type, batch_size, channels, height, width));
+    cudnn_assert(cudnnSetTensor4dDescriptor(tensor_descriptor, format, type, batch_size, depth, height, width));
   }
   operator cudnnTensorDescriptor_t() const { return tensor_descriptor; }
+
+  cudnnDataType_t Type() const { return GetParameters().type; }
+  int BatchSize() const { return GetParameters().batch_size; }
+  int Depth() const { return GetParameters().depth; }
+  int Height() const { return GetParameters().height; }
+  int Width() const { return GetParameters().width; }
+
   void Destroy() {
     cudnn_assert(cudnnDestroyTensorDescriptor(tensor_descriptor));
   }
@@ -68,12 +86,32 @@ public:
 
 class FilterDescriptor {
   cudnnFilterDescriptor_t filter_descriptor;
+
+  struct Parameters {
+    cudnnDataType_t type;
+    cudnnTensorFormat_t format;
+    int output_depth, input_depth, height, width;
+  };
+  Parameters GetParameters() const {
+    Parameters p;
+    cudnn_assert(cudnnGetFilter4dDescriptor(filter_descriptor, &p.type, &p.format, &p.output_depth, &p.input_depth, &p.height, &p.width));
+    return p;
+  }
+
 public:
   void Create(int output_depth, int input_depth, int height, int width, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW) {
     cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
     cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, type, format, output_depth, input_depth, height, width));
   }
   operator cudnnFilterDescriptor_t() const { return filter_descriptor; }
+
+  cudnnDataType_t Type() const { return GetParameters().type; }
+  cudnnTensorFormat_t Format() const { return GetParameters().format; }
+  int OutputDepth() const { return GetParameters().output_depth; }
+  int InputDepth() const { return GetParameters().input_depth; }
+  int Height() const { return GetParameters().height; }
+  int Width() const { return GetParameters().width; }
+
   void Destroy() {
     cudnn_assert(cudnnDestroyFilterDescriptor(filter_descriptor));
   }
