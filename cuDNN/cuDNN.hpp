@@ -16,7 +16,7 @@ namespace cuDNN {
  *
  * \param expression A cuDNN function call. For example, `cudnnCreate()`.
  */
-#define cudnn_assert(expr) _cudnn_assert(expr, __FILE__, __LINE__, #expr);
+#define cudnn_assert(expression) _cudnn_assert(expression, __FILE__, __LINE__, #expression);
 /** \brief Is intended to be called by the macro `cudnn_assert` only. */
 void _cudnn_assert(cudnnStatus_t status, const char* call_file, unsigned int call_line, const char* expression) {
   if (status==CUDNN_STATUS_SUCCESS) return;
