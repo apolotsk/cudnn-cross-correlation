@@ -1,7 +1,6 @@
 #include <cstdlib> // For rand.
 template <typename T> inline T rand() { return (T)rand()/RAND_MAX; }
-template <typename T>
-void rand(void* data, int count) {
+template <typename T> void rand(void* data, int count) {
   for (int i = 0; i<count; ++i) ((T*)data)[i] = rand<T>();
 }
 
