@@ -53,7 +53,7 @@ int main() {
     return data;
   };
   printf("Create edge detection kernel data.\n");
-  filter.CopyTo(filter_data());
+  filter.CopyFrom(filter_data());
   printf("Copy the kernel data into the filter.\n");
 
   Tensor<float> output;
@@ -68,7 +68,7 @@ int main() {
   printf("Cross-correlate the input tensor and the filter.\n");
 
   void* output_data = malloc(output.Size());
-  output.CopyFrom(output_data);
+  output.CopyTo(output_data);
   save_image(output_data, output.height, output.width, "output.png");
   printf("Save the output tensor as an image to output.png.\n");
   free(output_data);

@@ -21,12 +21,12 @@ public:
   void Create(size_t size, const void* data = NULL) {
     this->size = size;
     cuda_assert(cudaMalloc(&this->data, size));
-    if (data) CopyTo(data);
+    if (data) CopyFrom(data);
   }
-  void CopyTo(const void* data) {
+  void CopyFrom(const void* data) {
     cuda_assert(cudaMemcpy(this->data, data, size, cudaMemcpyHostToDevice));
   }
-  void* CopyFrom(void* data) const {
+  void* CopyTo(void* data) const {
     cuda_assert(cudaMemcpy(data, this->data, size, cudaMemcpyDeviceToHost));
     return data;
   }
