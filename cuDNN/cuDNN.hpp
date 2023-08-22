@@ -4,6 +4,8 @@
 #include <tuple>
 #include <cudnn.h>
 
+typedef __fp16 half;
+
 namespace cuDNN {
 
 void _cudnn_assert(cudnnStatus_t status, const char* call_file, unsigned int call_line, const char* expression) {
@@ -13,7 +15,6 @@ void _cudnn_assert(cudnnStatus_t status, const char* call_file, unsigned int cal
 }
 #define cudnn_assert(expr) _cudnn_assert(expr, __FILE__, __LINE__, #expr);
 
-typedef __fp16 half;
 template <typename T> cudnnDataType_t type;
 template <> cudnnDataType_t type<half> = CUDNN_DATA_HALF;
 template <> cudnnDataType_t type<float> = CUDNN_DATA_FLOAT;
