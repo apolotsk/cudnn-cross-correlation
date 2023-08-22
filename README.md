@@ -1,6 +1,6 @@
 # [Cross-correlation][cross-correlation] using [cuDNN][cuDNN]
 
-This is a C/C++ example of batched 2D cross-correlation using cuDNN.
+This is a C++ example of batched 2D cross-correlation using cuDNN.
 - It takes a 4D input tensor with shape [batch size, depth, input tensor height, input tensor width].
   For example, a single (batch size is 1) RGB (depth is 3) image.
   ![Input tensor](./.README.md/input.png)
@@ -19,10 +19,10 @@ This is a C/C++ example of batched 2D cross-correlation using cuDNN.
 
 1. [Install NVIDIA cudart][install-cuda].
    - cudart is a part of the *CUDA Toolkit*.
-   - Tested using cudart version 10.2.
+   - Tested cudart version 10.2.
 
 2. [Install NVIDIA cuDNN][install-cudnn].
-   - Tested using cuDNN version 8.0.
+   - Tested cuDNN version 8.0.
 
 2. [Install OpenCV][install-opencv].
 
@@ -48,15 +48,10 @@ make
 $ cd Example
 $ ./Example 
 Load an image from input.png.
-Create the input tensor.
-Copy the image into the input tensor.
-The input tensor shape is [1, 354, 630, 3].
-Create the filter.
-The filter shape is [1, 3, 3, 3].
-Create edge detection kernel data.
-Copy the kernel data into the filter.
-Create the output tensor.
-The output tensor shape [1, 352, 628, 1].
+Create the input tensor with shape is [1, 354, 630, 3] and image data.
+Initialize edge detection kernel.
+Create the filter with shape [1, 3, 3, 3] and kernel data.
+Create the output tensor with shape [1, 352, 628, 1].
 Cross-correlate the input tensor and the filter.
 Save the output tensor as an image to output.png.
 ```
@@ -66,9 +61,10 @@ Save the output tensor as an image to output.png.
 ```
 $ cd MeasureSpeed
 $ ./MeasureSpeed
-Create input tensor with shape [1, 1, 128, 128] and random data.
-Create filter with shape [512, 1, 16, 16] and random data.
-Cross-correlation takes 27.2 ms.
+Create the input tensor with shape [1, 1, 128, 128] and random data.
+Create the filter with shape [512, 1, 16, 16] and random data.
+Create the output tensor with shape [1, 512, 113, 113].
+Cross-correlation takes 27.4 ms (on average over 10 runs).
 ```
 
 - Tested on the device [Jetson Nano Developer][jetson-nano-developer-kit] running OS [L4T 32.4.4][linux-tegra].
