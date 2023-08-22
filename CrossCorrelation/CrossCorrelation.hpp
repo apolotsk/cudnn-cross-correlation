@@ -14,7 +14,7 @@ enum Format {
   NHWC = CUDNN_TENSOR_NHWC,
 };
 
-class Data {
+class DeviceData {
 public:
   size_t size;
   void* data = NULL;
@@ -36,37 +36,37 @@ public:
 };
 
 template <typename T>
-class Tensor: public cuDNN::TensorDescriptor, public Data {
+class Tensor: public cuDNN::TensorDescriptor, public DeviceData {
 public:
   int batch_size, depth, height, width;
   void Create(int batch_size, int depth, int height, int width, const void* data = NULL, Format format = NCHW) {
     cuDNN::TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
-    Data::Create(batch_size * depth * height * width * sizeof(T), data);
+    DeviceData::Create(batch_size * depth * height * width * sizeof(T), data);
     this->batch_size = batch_size;
     this->depth = depth;
     this->height = height;
     this->width = width;
   }
   void Destroy() {
-    Data::Destroy();
+    DeviceData::Destroy();
     cuDNN::TensorDescriptor::Destroy();
   }
 };
 
 template <typename T>
-class Filter: public cuDNN::FilterDescriptor, public Data {
+class Filter: public cuDNN::FilterDescriptor, public DeviceData {
 public:
   int output_depth, input_depth, height, width;
   void Create(int output_depth, int input_depth, int height, int width, const void* data = NULL, Format format = NCHW) {
     cuDNN::FilterDescriptor::Create(output_depth, input_depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
-    Data::Create(output_depth * input_depth * height * width * sizeof(T), data);
+    DeviceData::Create(output_depth * input_depth * height * width * sizeof(T), data);
     this->output_depth = output_depth;
     this->input_depth = input_depth;
     this->height = height;
     this->width = width;
   }
   void Destroy() {
-    Data::Destroy();
+    DeviceData::Destroy();
     cuDNN::FilterDescriptor::Destroy();
   }
 };
