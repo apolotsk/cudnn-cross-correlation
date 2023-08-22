@@ -13,7 +13,7 @@ namespace cudart {
  *
  * \param expression A cuda runtime function call. For example, `cudaMalloc(...)`.
  */
-#define cuda_assert(expr) _cuda_assert(expr, __FILE__, __LINE__, #expr);
+#define cuda_assert(expression) _cuda_assert(expression, __FILE__, __LINE__, #expression);
 /** \brief Is intended to be called by the macro `cuda_assert` only. */
 void _cuda_assert(cudaError_t error, const char* call_file, unsigned int call_line, const char* expression) {
   if (error==cudaSuccess) return;
