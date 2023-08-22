@@ -105,9 +105,9 @@ public:
     cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, mode, type));
   }
   std::tuple<int,int,int,int> OutputDim(const cudnnTensorDescriptor_t& input_descriptor, const cudnnFilterDescriptor_t& filter_descriptor) {
-    int batch_size, channels, height, width;
-    cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &batch_size, &channels, &height, &width));
-    return {batch_size, channels, height, width};
+    int batch_size, depth, height, width;
+    cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &batch_size, &depth, &height, &width));
+    return {batch_size, depth, height, width};
   }
   cudnnConvolutionFwdAlgo_t FindAlgorithm(const Handle& handle, const cudnnTensorDescriptor_t& input_descriptor, const cudnnFilterDescriptor_t& filter_descriptor, const cudnnTensorDescriptor_t& output_descriptor) {
     cudnnConvolutionFwdAlgoPerf_t performance_result;
