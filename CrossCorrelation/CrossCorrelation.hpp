@@ -43,8 +43,8 @@ public:
     cuDNN::ConvolutionDescriptor::Create<T>(CUDNN_CROSS_CORRELATION);
     handle.Create();
   }
-  /** \brief Configure the cross-correlation given the input tensor, filter and output tensor. */
-  void Configure(const Tensor<T>& input, const Filter<T>& filter, const Tensor<T>& output) {
+  /** \brief Configure the cross-correlation given the input tensor, filter and output tensor descriptions. */
+  void Configure(const cuDNN::TensorDescriptor& input, const cuDNN::FilterDescriptor& filter, const cuDNN::TensorDescriptor& output) {
     convolution_algorithm = FindAlgorithm(handle, input, filter, output);
     workspace.Create(WorkspaceSize(handle, input, filter, output, convolution_algorithm));
   }
