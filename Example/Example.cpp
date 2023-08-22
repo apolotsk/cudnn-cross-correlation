@@ -24,7 +24,7 @@ int main() {
     cv::Mat image = load_image("input.png");
     printf("Load an image from input.png.\n");
     input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), NHWC);
-    printf("Create the input tensor with shape is [%d, %d, %d, %d] and image data.\n", input.batch_size, input.height, input.width, input.depth);
+    printf("Create the input tensor with shape is [%d, %d, %d, %d] and image data.\n", input.BatchSize(), input.Height(), input.Width(), input.Depth());
   }
 
   Filter<float> filter;
@@ -47,14 +47,14 @@ int main() {
       }
     }};
     printf("Initialize edge detection kernel.\n");
-    filter.Create(1, input.depth, 3, 3, data);
-    printf("Create the filter with shape [%d, %d, %d, %d] and kernel data.\n", filter.output_depth, filter.input_depth, filter.height, filter.width);
+    filter.Create(1, input.Depth(), 3, 3, data);
+    printf("Create the filter with shape [%d, %d, %d, %d] and kernel data.\n", filter.OutputDepth(), filter.InputDepth(), filter.Height(), filter.Width());
   }
 
   Tensor<float> output;
   {
-    output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, NULL, NHWC);
-    printf("Create the output tensor with shape [%d, %d, %d, %d].\n", output.batch_size, output.height, output.width, output.depth);
+    output.Create(input.BatchSize(), filter.OutputDepth(), input.Height()-filter.Height()+1, input.Width()-filter.Width()+1, nullptr, NHWC);
+    printf("Create the output tensor with shape [%d, %d, %d, %d].\n", output.BatchSize(), output.Height(), output.Width(), output.Depth());
   }
 
   CrossCorrelation<float> cross_correlation;
@@ -68,7 +68,7 @@ int main() {
   {
     void* output_data = malloc(output.Size());
     output.CopyTo(output_data);
-    save_image(output_data, output.height, output.width, "output.png");
+    save_image(output_data, output.Height(), output.Width(), "output.png");
     printf("Save the output tensor as an image to output.png.\n");
     free(output_data);
   }

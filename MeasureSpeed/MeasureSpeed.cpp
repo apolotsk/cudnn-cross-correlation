@@ -27,23 +27,23 @@ int main() {
     rand<type>(input_data, input.Size()/sizeof(type));
     input.CopyFrom(input_data);
     free(input_data);
-    printf("Create the input tensor with shape [%d, %d, %d, %d] and random data.\n", input.batch_size, input.depth, input.height, input.width);
+    printf("Create the input tensor with shape [%d, %d, %d, %d] and random data.\n", input.BatchSize(), input.Depth(), input.Height(), input.Width());
   }
 
   Filter<type> filter;
   {
-    filter.Create(512, input.depth, 16, 16, nullptr, NCHW);
+    filter.Create(512, input.Depth(), 16, 16, nullptr, NCHW);
     void* filter_data = malloc(filter.Size());
     rand<type>(filter_data, filter.Size()/sizeof(type));
     filter.CopyFrom(filter_data);
     free(filter_data);
-    printf("Create the filter with shape [%d, %d, %d, %d] and random data.\n", filter.output_depth, filter.input_depth, filter.height, filter.width);
+    printf("Create the filter with shape [%d, %d, %d, %d] and random data.\n", filter.OutputDepth(), filter.InputDepth(), filter.Height(), filter.Width());
   }
 
   Tensor<type> output;
   {
-    output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, nullptr, NCHW);
-    printf("Create the output tensor with shape [%d, %d, %d, %d].\n", output.batch_size, output.depth, output.height, output.width);
+    output.Create(input.BatchSize(), filter.OutputDepth(), input.Height()-filter.Height()+1, input.Width()-filter.Width()+1, nullptr, NCHW);
+    printf("Create the output tensor with shape [%d, %d, %d, %d].\n", output.BatchSize(), output.Depth(), output.Height(), output.Width());
   }
 
   CrossCorrelation<float> cross_correlation;
