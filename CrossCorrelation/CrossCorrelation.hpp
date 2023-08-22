@@ -16,9 +16,9 @@ enum Format {
 
 class DeviceData {
   size_t size;
-  void* data = NULL;
+  void* data = nullptr;
 public:
-  void Create(size_t size, const void* data = NULL) {
+  void Create(size_t size, const void* data = nullptr) {
     this->size = size;
     cuda_assert(cudaMalloc(&this->data, size));
     if (data) CopyFrom(data);
@@ -42,7 +42,7 @@ template <typename T>
 class Tensor: public cuDNN::TensorDescriptor, public DeviceData {
 public:
   int batch_size, depth, height, width;
-  void Create(int batch_size, int depth, int height, int width, const void* data = NULL, Format format = NCHW) {
+  void Create(int batch_size, int depth, int height, int width, const void* data = nullptr, Format format = NCHW) {
     cuDNN::TensorDescriptor::Create(batch_size, depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
     DeviceData::Create(batch_size * depth * height * width * sizeof(T), data);
     this->batch_size = batch_size;
@@ -60,7 +60,7 @@ template <typename T>
 class Filter: public cuDNN::FilterDescriptor, public DeviceData {
 public:
   int output_depth, input_depth, height, width;
-  void Create(int output_depth, int input_depth, int height, int width, const void* data = NULL, Format format = NCHW) {
+  void Create(int output_depth, int input_depth, int height, int width, const void* data = nullptr, Format format = NCHW) {
     cuDNN::FilterDescriptor::Create(output_depth, input_depth, height, width, data_type<T>, (cudnnTensorFormat_t)format);
     DeviceData::Create(output_depth * input_depth * height * width * sizeof(T), data);
     this->output_depth = output_depth;
@@ -79,7 +79,7 @@ class CrossCorrelation: public cuDNN::ConvolutionDescriptor {
   cuDNN::Handle handle;
   cudnnConvolutionFwdAlgo_t convolution_algorithm;
   size_t workspace_size = 0;
-  void* workspace_data_device = NULL;
+  void* workspace_data_device = nullptr;
 public:
   void Create() {
     cuDNN::ConvolutionDescriptor::Create(data_type<T>);
