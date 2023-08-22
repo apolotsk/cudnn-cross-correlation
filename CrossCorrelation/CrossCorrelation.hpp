@@ -111,4 +111,3 @@ public:
     cuDNN::ConvolutionDescriptor::Destroy();
   }
 };
-
