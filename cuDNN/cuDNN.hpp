@@ -59,10 +59,15 @@ class TensorDescriptor {
   struct Parameters {
     cudnnDataType_t type;
     int batch_size, depth, height, width;
+    int batch_size_stride, depth_stride, height_stride, width_stride;
   };
   Parameters GetParameters() const {
     Parameters p;
-    cudnn_assert(cudnnGetTensor4dDescriptor(tensor_descriptor, &p.type, &p.batch_size, &p.depth, &p.height, &p.width, nullptr, nullptr, nullptr, nullptr));
+    cudnn_assert(cudnnGetTensor4dDescriptor(tensor_descriptor,
+      &p.type,
+      &p.batch_size, &p.depth, &p.height, &p.width,
+      &p.batch_size_stride, &p.depth_stride, &p.height_stride, &p.width_stride
+    ));
     return p;
   }
 
