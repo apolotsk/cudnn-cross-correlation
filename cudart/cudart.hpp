@@ -38,6 +38,7 @@ public:
    * \param data Data pointer in the system memory. If specified, it will be copied to the device memory.
    */
   void Create(size_t size, const void* data = nullptr) {
+    if (this->data) Destroy();
     this->size = size;
     cuda_assert(cudaMalloc(&this->data, size));
     if (data) CopyFrom(data);
