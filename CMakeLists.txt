@@ -1,14 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
-project(MyProject)
-set(CMAKE_VERBOSE_MAKEFILE ON)
+project("cuDNN CrossCorrelation")
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-add_executable(Test test.cpp Convolution.hpp cudnn.hpp cuda.hpp)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(cudart REQUIRED IMPORTED_TARGET cudart-10.2)
-find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs calib3d)
-target_link_libraries(Test PUBLIC opencv_imgcodecs PkgConfig::cudart cudnn)
-configure_file(input.png ${CMAKE_CURRENT_BINARY_DIR}/input.png COPYONLY)
-
-add_executable(Measure measure-speed.cpp Convolution.hpp cudnn.hpp cuda.hpp)
-target_include_directories(Measure PUBLIC ../Time ../Statistics)
-target_link_libraries(Measure PUBLIC PkgConfig::cudart cudnn)
+add_subdirectory(MeasureSpeed)
+add_subdirectory(Example)

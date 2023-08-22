@@ -9,4 +9,3 @@ void _cuda_assert(cudaError_t error, int line) {
   exit(1);
 }
 #define cuda_assert(status) _cuda_assert(status, __LINE__);
-
