@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cuda_runtime.h> // For cuda*.
 #include <cudart.hpp> // For cuda_assert.
 
 class DeviceData {
