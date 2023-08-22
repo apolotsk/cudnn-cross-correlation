@@ -56,7 +56,7 @@ public:
 class TensorDescriptor {
   cudnnTensorDescriptor_t tensor_descriptor;
 public:
-  void Create(int batch_size, int channels, int height, int width, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
+  void Create(int batch_size, int depth, int height, int width, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
     cudnn_assert(cudnnCreateTensorDescriptor(&tensor_descriptor));
     cudnn_assert(cudnnSetTensor4dDescriptor(tensor_descriptor, format, type, batch_size, channels, height, width));
   }
