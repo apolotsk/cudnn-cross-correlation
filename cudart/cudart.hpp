@@ -1,7 +1,6 @@
 #pragma once
 #include <stdio.h> // For `printf()`.
 #include <stdexcept> // For std::runtime_error().
-#include <stdlib.h> // For `exit()`.
 #include <cuda_runtime.h>
 
 void _cuda_assert(cudaError_t error, const char* call_file, unsigned int call_line, const char* expression) {
