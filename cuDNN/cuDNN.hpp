@@ -13,6 +13,12 @@ void _cudnn_assert(cudnnStatus_t status, const char* call_file, unsigned int cal
 }
 #define cudnn_assert(expr) _cudnn_assert(expr, __FILE__, __LINE__, #expr);
 
+typedef __fp16 half;
+template <typename T> cudnnDataType_t type;
+template <> cudnnDataType_t type<half> = CUDNN_DATA_HALF;
+template <> cudnnDataType_t type<float> = CUDNN_DATA_FLOAT;
+template <> cudnnDataType_t type<double> = CUDNN_DATA_DOUBLE;
+
 class TensorDescriptor {
   cudnnTensorDescriptor_t tensor_descriptor;
 
@@ -35,6 +41,10 @@ public:
   void Create(int batch_size, int depth, int height, int width, cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
     cudnn_assert(cudnnCreateTensorDescriptor(&tensor_descriptor));
     cudnn_assert(cudnnSetTensor4dDescriptor(tensor_descriptor, format, type, batch_size, depth, height, width));
+  }
+  template <typename T>
+  void Create(int batch_size, int depth, int height, int width, cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC) {
+    Create(batch_size, depth, height, width, type<T>, format);
   }
   operator cudnnTensorDescriptor_t() const { return tensor_descriptor; }
 
@@ -71,6 +81,10 @@ public:
     cudnn_assert(cudnnCreateFilterDescriptor(&filter_descriptor));
     cudnn_assert(cudnnSetFilter4dDescriptor(filter_descriptor, type, format, output_depth, input_depth, height, width));
   }
+  template <typename T>
+  void Create(int output_depth, int input_depth, int height, int width, cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW) {
+    Create(output_depth, input_depth, height, width, type<T>, format);
+  }
   operator cudnnFilterDescriptor_t() const { return filter_descriptor; }
 
   cudnnDataType_t Type() const { return GetParameters().type; }
@@ -103,6 +117,10 @@ public:
   void Create(cudnnDataType_t type = CUDNN_DATA_FLOAT, cudnnConvolutionMode_t mode = CUDNN_CONVOLUTION) {
     cudnn_assert(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
     cudnn_assert(cudnnSetConvolution2dDescriptor(convolution_descriptor, 0, 0, 1, 1, 1, 1, mode, type));
+  }
+  template <typename T>
+  void Create(cudnnConvolutionMode_t mode = CUDNN_CONVOLUTION) {
+    Create(type<T>, mode);
   }
   std::tuple<int,int,int,int> OutputDim(const TensorDescriptor& input_descriptor, const FilterDescriptor& filter_descriptor) {
     int batch_size, depth, height, width;
