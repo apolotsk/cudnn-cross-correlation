@@ -1,7 +1,6 @@
 #include <cstdio> // For printf.
 #include <cstring> // For malloc, free.
 #include <CrossCorrelation.hpp>
-#include "Stopwatch.hpp"
 
 #include <cstdlib> // For rand.
 template <typename T> T rand();
@@ -11,6 +10,12 @@ template<> inline half rand<half>() { return (half)rand<double>(); }
 template <typename T>
 inline void rand(void* data, int count) {
   for (int i = 0; i<count; ++i) ((T*)data)[i] = rand<T>();
+}
+
+#include <chrono> // For `std::chrono`.
+double timestamp() {
+  std::chrono::steady_clock::time_point time_point = std::chrono::steady_clock::now();
+  return std::chrono::duration<double>(time_point.time_since_epoch()).count();
 }
 
 int main() {
@@ -39,12 +44,13 @@ int main() {
   cross_correlation.Configure(input, filter, output);
   cross_correlation.Run(input, filter, output);
 
-  Stopwatch stopwatch;
+  double timestamp0 = timestamp();
   const int count = 10;
   for (int i = 0; i<count; ++i) {
     cross_correlation.Run(input, filter, output);
   }
-  printf("Cross-correlation takes %.1f ms.\n", stopwatch.Time()/count*1e3);
+  double timestamp1 = timestamp();
+  printf("Cross-correlation takes %.1f ms.\n", (timestamp1-timestamp0)/count*1e3);
 
   cross_correlation.Destroy();
   output.Destroy();
