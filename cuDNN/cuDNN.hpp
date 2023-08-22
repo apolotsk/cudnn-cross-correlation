@@ -109,18 +109,18 @@ public:
     cudnn_assert(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor, input_descriptor, filter_descriptor, &batch_size, &channels, &height, &width));
     return {batch_size, channels, height, width};
   }
-  cudnnConvolutionFwdAlgo_t FindAlgorithm(const cudnnHandle_t& handle, const cudnnTensorDescriptor_t& input_descriptor, const cudnnFilterDescriptor_t& filter_descriptor, const cudnnTensorDescriptor_t& output_descriptor) {
+  cudnnConvolutionFwdAlgo_t FindAlgorithm(const Handle& handle, const cudnnTensorDescriptor_t& input_descriptor, const cudnnFilterDescriptor_t& filter_descriptor, const cudnnTensorDescriptor_t& output_descriptor) {
     cudnnConvolutionFwdAlgoPerf_t performance_result;
     int count;
     cudnn_assert(cudnnFindConvolutionForwardAlgorithm(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, 1, &count, &performance_result));
     return performance_result.algo;
   }
-  int WorkspaceSize(cudnnHandle_t handle, cudnnTensorDescriptor_t input_descriptor, cudnnFilterDescriptor_t filter_descriptor, cudnnTensorDescriptor_t output_descriptor, cudnnConvolutionFwdAlgo_t convolution_algorithm) {
+  int WorkspaceSize(const Handle& handle, const cudnnTensorDescriptor_t& input_descriptor, const cudnnFilterDescriptor_t& filter_descriptor, const cudnnTensorDescriptor_t& output_descriptor, const cudnnConvolutionFwdAlgo_t& convolution_algorithm) {
     size_t workspace_size;
     cudnn_assert(cudnnGetConvolutionForwardWorkspaceSize(handle, input_descriptor, filter_descriptor, convolution_descriptor, output_descriptor, convolution_algorithm, &workspace_size));
     return workspace_size;
   }
-  void Forward(cudnnHandle_t handle, const cudnnTensorDescriptor_t input_descriptor, const void *input_data_device, const cudnnFilterDescriptor_t filter_descriptor, const void *filter_data_device, const cudnnConvolutionDescriptor_t convolution_descriptor, cudnnConvolutionFwdAlgo_t convolution_algorithm, void *workspace_data_device, size_t workspace_size, const cudnnTensorDescriptor_t output_descriptor, void *output_data_device) {
+  void Forward(const Handle& handle, const cudnnTensorDescriptor_t& input_descriptor, const void *input_data_device, const cudnnFilterDescriptor_t filter_descriptor, const void *filter_data_device, const cudnnConvolutionDescriptor_t convolution_descriptor, cudnnConvolutionFwdAlgo_t convolution_algorithm, void *workspace_data_device, size_t workspace_size, const cudnnTensorDescriptor_t& output_descriptor, void *output_data_device) {
     const float alpha = 1.0f, beta = 0.0f;
     cudnn_assert(cudnnConvolutionForward(
       handle, &alpha,
