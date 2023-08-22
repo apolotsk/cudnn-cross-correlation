@@ -2,7 +2,16 @@
 #include <cstring> // For malloc, free.
 #include <CrossCorrelation.hpp>
 #include "Stopwatch.hpp"
-#include "Rand.hpp"
+
+#include <cstdlib> // For rand.
+template <typename T> T rand();
+template<> inline double rand<double>() { return (double)rand()/RAND_MAX; }
+template<> inline float rand<float>() { return (float)rand<double>(); }
+template<> inline half rand<half>() { return (half)rand<double>(); }
+template <typename T>
+inline void rand(void* data, int count) {
+  for (int i = 0; i<count; ++i) ((T*)data)[i] = rand<T>();
+}
 
 int main() {
   typedef float type;
