@@ -23,6 +23,10 @@ public:
     cuda_assert(cudaMalloc(&this->data, size));
     if (data) CopyFrom(data);
   }
+  size_t Size() const { return size; }
+  void* Data() { return data; }
+  const void* Data() const { return data; }
+
   void CopyFrom(const void* data) {
     cuda_assert(cudaMemcpy(this->data, data, size, cudaMemcpyHostToDevice));
   }
@@ -30,9 +34,6 @@ public:
     cuda_assert(cudaMemcpy(data, this->data, size, cudaMemcpyDeviceToHost));
     return data;
   }
-  size_t Size() const { return size; }
-  void* Data() { return data; }
-  const void* Data() const { return data; }
   void Destroy() {
     if (data) cuda_assert(cudaFree(data));
   }
