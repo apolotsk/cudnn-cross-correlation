@@ -40,8 +40,8 @@ class CrossCorrelation: public cuDNN::ConvolutionDescriptor {
   cudart::DeviceData workspace;
 public:
   void Create() {
-    cuDNN::ConvolutionDescriptor::Create<T>(CUDNN_CROSS_CORRELATION);
     handle.Create();
+    cuDNN::ConvolutionDescriptor::Create<T>(CUDNN_CROSS_CORRELATION);
   }
   /** \brief Configure the cross-correlation given the input tensor, filter and output tensor descriptions. */
   void Configure(const cuDNN::TensorDescriptor& input, const cuDNN::FilterDescriptor& filter, const cuDNN::TensorDescriptor& output) {
