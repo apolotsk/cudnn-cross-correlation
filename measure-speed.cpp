@@ -2,6 +2,7 @@
 #include <Stopwatch.hpp>
 #include <Rand.hpp>
 #include "Convolution.hpp"
+
 int main() {
   typedef float type;
   Tensor<type> input;
