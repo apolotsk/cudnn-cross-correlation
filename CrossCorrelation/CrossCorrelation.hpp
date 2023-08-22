@@ -4,6 +4,7 @@
 
 typedef cuDNN::Format Format;
 
+/** \brief A tensor (the description and the data). */
 template <typename T>
 class Tensor: public cuDNN::TensorDescriptor, public cudart::DeviceData {
 public:
@@ -17,6 +18,7 @@ public:
   }
 };
 
+/** \brief A filter (the description and the data). */
 template <typename T>
 class Filter: public cuDNN::FilterDescriptor, public cudart::DeviceData {
 public:
@@ -30,6 +32,7 @@ public:
   }
 };
 
+/** \brief A Cross-collelation. */
 template <typename T>
 class CrossCorrelation: public cuDNN::ConvolutionDescriptor {
   cuDNN::Handle handle;
@@ -40,6 +43,7 @@ public:
     cuDNN::ConvolutionDescriptor::Create<T>(CUDNN_CROSS_CORRELATION);
     handle.Create();
   }
+  /** \brief Configure the cross-correlation given the input tensor, filter and output tensor. */
   void Configure(const Tensor<T>& input, const Filter<T>& filter, const Tensor<T>& output) {
     convolution_algorithm = FindAlgorithm(handle, input, filter, output);
     workspace.Create(WorkspaceSize(handle, input, filter, output, convolution_algorithm));
