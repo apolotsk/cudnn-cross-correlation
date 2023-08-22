@@ -11,27 +11,26 @@ double timestamp() {
 }
 
 #include <cstdio> // For printf.
-#include <cstring> // For malloc, free.
 #include <CrossCorrelation.hpp>
 int main() {
   typedef float type;
   Tensor<type> input;
   {
     input.Create(1, 1, 128, 128, nullptr, Format::NCHW);
-    void* input_data = malloc(input.Size());
+    void* input_data = new char[input.Size()];
     rand<type>(input_data, input.Size()/sizeof(type));
     input.CopyFrom(input_data);
-    free(input_data);
+    delete [] (char*)input_data;
     printf("Create the input tensor with shape [%d, %d, %d, %d] and random data.\n", input.BatchSize(), input.Depth(), input.Height(), input.Width());
   }
 
   Filter<type> filter;
   {
     filter.Create(512, input.Depth(), 16, 16, nullptr, Format::NCHW);
-    void* filter_data = malloc(filter.Size());
+    void* filter_data = new char[filter.Size()];
     rand<type>(filter_data, filter.Size()/sizeof(type));
     filter.CopyFrom(filter_data);
-    free(filter_data);
+    delete [] (char*)filter_data;
     printf("Create the filter with shape [%d, %d, %d, %d] and random data.\n", filter.OutputDepth(), filter.InputDepth(), filter.Height(), filter.Width());
   }
 

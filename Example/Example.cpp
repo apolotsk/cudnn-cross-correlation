@@ -16,7 +16,6 @@ void save_image(const void* data, int height, int width, const char* filepath) {
 }
 
 #include <cstdio> // For printf.
-#include <cstring> // For malloc, free.
 #include <CrossCorrelation.hpp>
 int main() {
   Tensor<float> input;
@@ -66,11 +65,11 @@ int main() {
   }
 
   {
-    void* output_data = malloc(output.Size());
+    void* output_data = new char[output.Size()];
     output.CopyTo(output_data);
     save_image(output_data, output.Height(), output.Width(), "output.png");
     printf("Save the output tensor as an image to output.png.\n");
-    free(output_data);
+    delete [] (char*)output_data;
   }
 
   cross_correlation.Destroy();
