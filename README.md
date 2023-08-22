@@ -1,6 +1,6 @@
 # [Cross-correlation][cross-correlation] using [cuDNN][cuDNN]
 
-This is a C++ example of batched 2D cross-correlation using cuDNN.
+This is a C++ example of batched 2D cross-correlation using cuDNN (accelerated with GPU).
 - It takes a 4D input tensor with shape [batch size, depth, input tensor height, input tensor width].
   For example, a single (batch size is 1) RGB (depth is 3) image.
   ![Input tensor](./.README.md/input.png)
