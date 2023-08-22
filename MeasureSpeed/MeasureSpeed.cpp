@@ -17,7 +17,7 @@ int main() {
   typedef float type;
   Tensor<type> input;
   {
-    input.Create(1, 1, 128, 128, nullptr, NCHW);
+    input.Create(1, 1, 128, 128, nullptr, Format::NCHW);
     void* input_data = malloc(input.Size());
     rand<type>(input_data, input.Size()/sizeof(type));
     input.CopyFrom(input_data);
@@ -27,7 +27,7 @@ int main() {
 
   Filter<type> filter;
   {
-    filter.Create(512, input.Depth(), 16, 16, nullptr, NCHW);
+    filter.Create(512, input.Depth(), 16, 16, nullptr, Format::NCHW);
     void* filter_data = malloc(filter.Size());
     rand<type>(filter_data, filter.Size()/sizeof(type));
     filter.CopyFrom(filter_data);
@@ -37,7 +37,7 @@ int main() {
 
   Tensor<type> output;
   {
-    output.Create(input.BatchSize(), filter.OutputDepth(), input.Height()-filter.Height()+1, input.Width()-filter.Width()+1, nullptr, NCHW);
+    output.Create(input.BatchSize(), filter.OutputDepth(), input.Height()-filter.Height()+1, input.Width()-filter.Width()+1, nullptr, Format::NCHW);
     printf("Create the output tensor with shape [%d, %d, %d, %d].\n", output.BatchSize(), output.Depth(), output.Height(), output.Width());
   }
 

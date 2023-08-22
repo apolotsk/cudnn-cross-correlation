@@ -28,19 +28,14 @@ public:
   }
 };
 
-#include <cudnn.h> // For cudnn*, CUDNN_*.
-
-enum Format {
-  NCHW = CUDNN_TENSOR_NCHW,
-  NHWC = CUDNN_TENSOR_NHWC,
-};
-
 #include <cuDNN.hpp> // For cuDNN::*.
+
+typedef cuDNN::Format Format;
 
 template <typename T>
 class Tensor: public cuDNN::TensorDescriptor, public DeviceData {
 public:
-  void Create(int batch_size, int depth, int height, int width, const void* data = nullptr, Format format = NCHW) {
+  void Create(int batch_size, int depth, int height, int width, const void* data = nullptr, Format format = Format::NCHW) {
     cuDNN::TensorDescriptor::Create<T>(batch_size, depth, height, width, (cudnnTensorFormat_t)format);
     DeviceData::Create(batch_size * depth * height * width * sizeof(T), data);
   }
@@ -53,7 +48,7 @@ public:
 template <typename T>
 class Filter: public cuDNN::FilterDescriptor, public DeviceData {
 public:
-  void Create(int output_depth, int input_depth, int height, int width, const void* data = nullptr, ::Format format = NCHW) {
+  void Create(int output_depth, int input_depth, int height, int width, const void* data = nullptr, Format format = Format::NCHW) {
     cuDNN::FilterDescriptor::Create<T>(output_depth, input_depth, height, width, (cudnnTensorFormat_t)format);
     DeviceData::Create(output_depth * input_depth * height * width * sizeof(T), data);
   }

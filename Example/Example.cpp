@@ -23,7 +23,7 @@ int main() {
   {
     cv::Mat image = load_image("input.png");
     printf("Load an image from input.png.\n");
-    input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), NHWC);
+    input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), Format::NHWC);
     printf("Create the input tensor with shape is [%d, %d, %d, %d] and image data.\n", input.BatchSize(), input.Height(), input.Width(), input.Depth());
   }
 
@@ -53,7 +53,7 @@ int main() {
 
   Tensor<float> output;
   {
-    output.Create(input.BatchSize(), filter.OutputDepth(), input.Height()-filter.Height()+1, input.Width()-filter.Width()+1, nullptr, NHWC);
+    output.Create(input.BatchSize(), filter.OutputDepth(), input.Height()-filter.Height()+1, input.Width()-filter.Width()+1, nullptr, Format::NHWC);
     printf("Create the output tensor with shape [%d, %d, %d, %d].\n", output.BatchSize(), output.Height(), output.Width(), output.Depth());
   }
 

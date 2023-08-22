@@ -19,6 +19,11 @@ template <> cudnnDataType_t type<half> = CUDNN_DATA_HALF;
 template <> cudnnDataType_t type<float> = CUDNN_DATA_FLOAT;
 template <> cudnnDataType_t type<double> = CUDNN_DATA_DOUBLE;
 
+enum Format {
+  NCHW = CUDNN_TENSOR_NCHW,
+  NHWC = CUDNN_TENSOR_NHWC,
+};
+
 class TensorDescriptor {
   cudnnTensorDescriptor_t tensor_descriptor;
 
