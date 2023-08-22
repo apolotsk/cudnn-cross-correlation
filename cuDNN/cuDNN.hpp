@@ -94,7 +94,10 @@ class FilterDescriptor {
   };
   Parameters GetParameters() const {
     Parameters p;
-    cudnn_assert(cudnnGetFilter4dDescriptor(filter_descriptor, &p.type, &p.format, &p.output_depth, &p.input_depth, &p.height, &p.width));
+    cudnn_assert(cudnnGetFilter4dDescriptor(filter_descriptor,
+      &p.type, &p.format,
+      &p.output_depth, &p.input_depth, &p.height, &p.width
+    ));
     return p;
   }
 
