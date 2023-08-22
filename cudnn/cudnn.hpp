@@ -1,4 +1,3 @@
-// https://www.goldsborough.me/cuda/ml/cudnn/c++/2017/10/01/14-37-23-convolutions_with_cudnn/
 #pragma once
 
 #include <stdio.h> // For `printf()`.
