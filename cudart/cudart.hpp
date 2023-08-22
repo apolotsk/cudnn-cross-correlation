@@ -1,5 +1,5 @@
 #pragma once
-#include <stdio.h> // For `printf()`.
+#include <cstdio> // For printf`.
 #include <stdexcept> // For std::runtime_error().
 #include <cuda_runtime.h>
 
