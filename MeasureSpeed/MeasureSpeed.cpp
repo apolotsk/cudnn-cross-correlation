@@ -1,5 +1,5 @@
-#include <stdio.h> // For printf.
-#include <string.h> // For malloc, free.
+#include <cstdio> // For printf.
+#include <cstring> // For malloc, free.
 #include <CrossCorrelation.hpp>
 #include "Stopwatch.hpp"
 #include "Rand.hpp"
