@@ -68,14 +68,13 @@ public:
 template <typename T>
 class CrossCorrelation: public cuDNN::ConvolutionDescriptor {
   cuDNN::Handle handle;
-  cudnnConvolutionFwdAlgo_t convolution_algorithm;
+  cudnnConvolutionFwdAlgo_t convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
   size_t workspace_size = 0;
   void* workspace_data_device = nullptr;
 public:
   void Create() {
     cuDNN::ConvolutionDescriptor::Create(data_type<T>);
     handle.Create();
-    convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
   }
   template <typename T2>
   void Configure(const Tensor<T2>& input, const Filter<T2>& filter, Tensor<T2>& output) {
