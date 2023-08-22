@@ -1,7 +1,3 @@
-#include <cstdio> // For printf.
-#include <cstring> // For malloc, free.
-#include <CrossCorrelation.hpp>
-
 #include <cstdlib> // For rand.
 template <typename T> T rand();
 template<> inline double rand<double>() { return (double)rand()/RAND_MAX; }
@@ -18,6 +14,9 @@ double timestamp() {
   return std::chrono::duration<double>(time_point.time_since_epoch()).count();
 }
 
+#include <cstdio> // For printf.
+#include <cstring> // For malloc, free.
+#include <CrossCorrelation.hpp>
 int main() {
   typedef float type;
   Tensor<type> input;
