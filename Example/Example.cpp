@@ -19,19 +19,15 @@ void save_image(const void* data, int height, int width, const char* filepath) {
 #include <string.h> // For malloc, free.
 #include <CrossCorrelation.hpp>
 int main() {
+  Tensor<float> input;
   cv::Mat image = load_image("input.png");
   printf("Load an image from input.png.\n");
-
-  Tensor<float> input;
   input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), NHWC);
   printf("Create the input tensor.\n");
   printf("Copy the image into the input tensor.\n");
   printf("The input tensor shape is [%d, %d, %d, %d].\n", input.batch_size, input.height, input.width, input.depth);
 
   Filter<float> filter;
-  filter.Create(1, input.depth, 3, 3, NULL);
-  printf("Create the filter.\n");
-  printf("The filter shape is [%d, %d, %d, %d].\n", filter.output_depth, filter.input_depth, filter.height, filter.width);
   float data[1][3][3][3] = {{
     {
       {-1, -1, -1},
@@ -50,7 +46,9 @@ int main() {
     }
   }};
   printf("Create edge detection kernel data.\n");
-  filter.CopyFrom(data);
+  filter.Create(1, input.depth, 3, 3, data);
+  printf("Create the filter.\n");
+  printf("The filter shape is [%d, %d, %d, %d].\n", filter.output_depth, filter.input_depth, filter.height, filter.width);
   printf("Copy the kernel data into the filter.\n");
 
   Tensor<float> output;
