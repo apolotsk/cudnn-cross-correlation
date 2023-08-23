@@ -23,9 +23,7 @@ int main() {
   cv::Mat image = load_image("input.png");
   printf("Load an image from input.png.\n");
   input.Create(1, image.channels(), image.rows, image.cols, image.ptr(), NHWC);
-  printf("Create the input tensor.\n");
-  printf("Copy the image into the input tensor.\n");
-  printf("The input tensor shape is [%d, %d, %d, %d].\n", input.batch_size, input.height, input.width, input.depth);
+  printf("Create the input tensor with shape is [%d, %d, %d, %d] and image data.\n", input.batch_size, input.height, input.width, input.depth);
 
   Filter<float> filter;
   float data[1][3][3][3] = {{
@@ -45,16 +43,13 @@ int main() {
       {-1, -1, -1},
     }
   }};
-  printf("Create edge detection kernel data.\n");
+  printf("Initialize edge detection kernel.\n");
   filter.Create(1, input.depth, 3, 3, data);
-  printf("Create the filter.\n");
-  printf("The filter shape is [%d, %d, %d, %d].\n", filter.output_depth, filter.input_depth, filter.height, filter.width);
-  printf("Copy the kernel data into the filter.\n");
+  printf("Create the filter with shape [%d, %d, %d, %d] and kernel data.\n", filter.output_depth, filter.input_depth, filter.height, filter.width);
 
   Tensor<float> output;
   output.Create(input.batch_size, filter.output_depth, input.height-filter.height+1, input.width-filter.width+1, NULL, NHWC);
-  printf("Create the output tensor.\n");
-  printf("The output tensor shape [%d, %d, %d, %d].\n", output.batch_size, output.height, output.width, output.depth);
+  printf("Create the output tensor with shape [%d, %d, %d, %d].\n", output.batch_size, output.height, output.width, output.depth);
 
   CrossCorrelation<float> cross_correlation;
   cross_correlation.Create();
