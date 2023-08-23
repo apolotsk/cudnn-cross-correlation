@@ -1,17 +1,20 @@
-# Cross-correlation using cuDNN
+# 2D cross-correlation using cuDNN
 
-This is a C++ example of 2D [cross-correlation][cross-correlation] over an image composed of several planes/challels.
+This is a C++ example of 2D [cross-correlation][cross-correlation] over an image composed of several planes/channels.
 - Uses the [GPU-accelerated library NVIDIA **cuDNN**][cuDNN].
-- It takes a 4D input tensor with shape [batch size, depth, input tensor height, input tensor width].
+- Takes a 4D input tensor with shape [batch size, depth, input tensor height, input tensor width].
   For example, a single (batch size is 1) RGB (depth is 3) image.
+
   ![Input tensor](./.README.md/input.png)
-- It also takes a 4D filter with shape [output depth, input depth = tensor depth, filter height, filter width].
+- Takes a 4D filter with shape [output depth, input depth = tensor depth, filter height, filter width].
   For example, a single (output depth is 1) RGB (input depth is 3, but all 3 are the same) [edge detection filter][Kernel].
+
   ![Filter](./.README.md/filter.svg)
-- It cross-correlates the input tensor and the filter and output a tensor with shape [batch size, output depth, output tensor height, output tensor width].
+- Cross-correlates the input tensor and the filter and output a tensor with shape [batch size, output depth, output tensor height, output tensor width].
+  
   ![Ouput tensor](./.README.md/output.png)
 - Consts of [partial cudart C++ abstraction](./cudart), [partial cuDNN C++ abstraction](./cuDNN), [high-level abstraction for cross-correlation](./CrossCorrelation), an [example](./Example) and [speed measurement](./MeasureSpeed).
-- Is based on the article called ["Convolutions with cuDNN" by Peter Goldsborough][article].
+- Based on the article called ["Convolutions with cuDNN" by Peter Goldsborough][article].
 
 
 [cross-correlation]: https://en.wikipedia.org/wiki/Cross-correlation
@@ -29,7 +32,7 @@ This is a C++ example of 2D [cross-correlation][cross-correlation] over an image
 2. [Install NVIDIA cuDNN][install-cudnn].
    - Tested cuDNN version 8.0.
 
-2. [Install OpenCV][install-opencv].
+3. [Install OpenCV][install-opencv].
 
 [install-cuda]: https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
 [install-cudnn]: https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html#install-linux
