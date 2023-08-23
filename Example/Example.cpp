@@ -32,28 +32,25 @@ int main() {
   filter.Create(1, input.depth, 3, 3, NULL);
   printf("Create the filter.\n");
   printf("The filter shape is [%d, %d, %d, %d].\n", filter.output_depth, filter.input_depth, filter.height, filter.width);
-  auto filter_data = []()->const void* {
-    static float data[1][3][3][3] = {{
-      {
-        {-1, -1, -1},
-        {-1,  8, -1},
-        {-1, -1, -1},
-      },
-      {
-        {-1, -1, -1},
-        {-1,  8, -1},
-        {-1, -1, -1},
-      },
-      {
-        {-1, -1, -1},
-        {-1,  8, -1},
-        {-1, -1, -1},
-      }
-    }};
-    return data;
-  };
+  float data[1][3][3][3] = {{
+    {
+      {-1, -1, -1},
+      {-1,  8, -1},
+      {-1, -1, -1},
+    },
+    {
+      {-1, -1, -1},
+      {-1,  8, -1},
+      {-1, -1, -1},
+    },
+    {
+      {-1, -1, -1},
+      {-1,  8, -1},
+      {-1, -1, -1},
+    }
+  }};
   printf("Create edge detection kernel data.\n");
-  filter.CopyFrom(filter_data());
+  filter.CopyFrom(data);
   printf("Copy the kernel data into the filter.\n");
 
   Tensor<float> output;
