@@ -13,6 +13,7 @@ This is a C++ example of batched 2D cross-correlation using cuDNN (accelerated w
 [cross-correlation]: https://en.wikipedia.org/wiki/Cross-correlation
 [cuDNN]: https://docs.nvidia.com/deeplearning/cudnn/
 [Kernel]: https://en.wikipedia.org/wiki/Kernel_(image_processing)
+[article]: https://www.goldsborough.me/cuda/ml/cudnn/c++/2017/10/01/14-37-23-convolutions_with_cudnn/
 
 
 ## Preparation
