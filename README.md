@@ -10,7 +10,7 @@ This is a C++ example of 2D [cross-correlation][cross-correlation] over an image
   For example, a single (output depth is 1) RGB (input depth is 3, but all 3 are the same) [edge detection filter][Kernel].
 
   ![Filter](./.README.md/filter.svg)
-- Cross-correlates the input tensor and the filter and output a tensor with shape [batch size, output depth, output tensor height, output tensor width].
+- Cross-correlates the input tensor and the filter, and outputs a tensor with shape [batch size, output depth, output tensor height, output tensor width].
   
   ![Ouput tensor](./.README.md/output.png)
 - Consts of [partial cudart C++ abstraction](./cudart), [partial cuDNN C++ abstraction](./cuDNN), [high-level abstraction for cross-correlation](./CrossCorrelation), an [example](./Example) and [speed measurement](./MeasureSpeed).
